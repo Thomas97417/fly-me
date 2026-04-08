@@ -4,10 +4,10 @@ import ResetPasswordForm from "@/components/reset-password-form";
 export const Route = createFileRoute("/(auth)/reset-password")({
   head: () => ({
     meta: [
-      { title: "Reset Password — Toma Stack" },
+      { title: "Reset Password — FlyMe" },
       {
         name: "description",
-        content: "Set a new password for your Toma Stack account.",
+        content: "Set a new password for your FlyMe account.",
       },
     ],
   }),
