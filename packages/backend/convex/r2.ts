@@ -1,4 +1,5 @@
 import { R2 } from "@convex-dev/r2";
+import { v } from "convex/values";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
@@ -32,6 +33,22 @@ export const generateUserUploadUrl = mutation({
     }
     const key = `uploads/${crypto.randomUUID()}`;
     return r2.generateUploadUrl(key);
+  },
+});
+
+export const generateFlightMediaUploadUrl = mutation({
+  args: { flightId: v.id("flights") },
+  handler: async (ctx, args) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) throw new Error("Not authenticated");
+
+    const flight = await ctx.db.get(args.flightId);
+    if (!flight || flight.userId !== user._id) {
+      throw new Error("Flight not found");
+    }
+
+    const key = `flights/${args.flightId}/${crypto.randomUUID()}`;
+    return await r2.generateUploadUrl(key);
   },
 });
 

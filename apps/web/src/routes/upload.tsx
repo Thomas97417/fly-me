@@ -19,7 +19,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const Route = createFileRoute("/upload")({
   head: () => ({
     meta: [
-      { title: "Upload — Toma Stack" },
+      { title: "Upload — FlyMe" },
       {
         name: "description",
         content: "Upload images to your R2 storage bucket.",

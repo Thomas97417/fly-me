@@ -11,7 +11,7 @@ import UpdateNameCard from "@/components/settings/update-name-card";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Toma Stack" },
+      { title: "Settings — FlyMe" },
       {
         name: "description",
         content: "Manage your account settings, email, password, and sessions.",

@@ -14,18 +14,15 @@ export default function Header() {
       <div className="flex h-12 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-base font-semibold tracking-tight">
-            Toma Stack
+            FlyMe
           </Link>
           <nav className="flex items-center gap-4">
             <Authenticated>
-              <Link to="/dashboard" className={linkStyles}>
-                Dashboard
+              <Link to="/flights" className={linkStyles}>
+                Mes Vols
               </Link>
               <Link to="/settings" className={linkStyles}>
                 Settings
-              </Link>
-              <Link to="/upload" className={linkStyles}>
-                Upload
               </Link>
             </Authenticated>
           </nav>
