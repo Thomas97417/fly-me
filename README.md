@@ -58,3 +58,31 @@ my-better-t-app/
 - `bun run dev:web`: Start only the web application
 - `bun run dev:setup`: Setup and configure your Convex project
 - `bun run check-types`: Check TypeScript types across all apps
+
+## Environment Variables
+
+Create the following env files before running the app:
+
+### `packages/backend/.env.local`
+
+```env
+CONVEX_DEPLOYMENT=dev:<your-deployment-name>
+BETTER_AUTH_SECRET=<your-secret>
+BETTER_AUTH_URL=http://localhost:3001
+RESEND_API_KEY=<your-resend-api-key>
+```
+
+### `apps/web/.env`
+
+```env
+CONVEX_DEPLOYMENT=dev:<your-deployment-name>
+CONVEX_URL=https://<your-deployment-name>.convex.cloud
+VITE_CONVEX_URL=https://<your-deployment-name>.convex.cloud
+VITE_CONVEX_SITE_URL=https://<your-deployment-name>.convex.site
+BETTER_AUTH_SECRET=<your-secret>
+BETTER_AUTH_URL=http://localhost:3001
+RESEND_API_KEY=<your-resend-api-key>
+EMAIL_FROM=<your-email> (onboarding@resend.dev)
+```
+
+> Run `bun run dev:setup` first to get your Convex deployment name, then copy the values from `packages/backend/.env.local` to `apps/web/.env`.
