@@ -111,6 +111,101 @@ export const getFlight = query({
   },
 });
 
+export const getPublicFlightPreview = query({
+  args: { flightId: v.id("flights") },
+  handler: async (ctx, args) => {
+    const flight = await ctx.db.get(args.flightId);
+    if (!flight || !flight.isPublic) return null;
+
+    // Get owner info
+    const user = await authComponent.getAnyUserById(ctx, flight.userId);
+    let ownerImage: string | null = null;
+    if (user?.image) {
+      if (user.image.startsWith("http")) {
+        ownerImage = user.image;
+      } else {
+        const metadata = await r2.getMetadata(ctx, user.image);
+        ownerImage = metadata?.url ?? null;
+      }
+    }
+
+    // Get first 4 media items
+    const allMedia = await ctx.db
+      .query("flightMedia")
+      .withIndex("by_flightId", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    const media = await Promise.all(
+      allMedia.slice(0, 4).map(async (m) => {
+        const metadata = await r2.getMetadata(ctx, m.r2Key);
+        return {
+          _id: m._id,
+          url: metadata?.url ?? null,
+          mediaType: m.mediaType,
+        };
+      })
+    );
+
+    return {
+      flight: {
+        _id: flight._id,
+        date: flight.date,
+        locationName: flight.locationName,
+        description: flight.description,
+        droneModel: flight.droneModel,
+        durationMinutes: flight.durationMinutes,
+        maxAltitudeMeters: flight.maxAltitudeMeters,
+        latitude: flight.latitude,
+        longitude: flight.longitude,
+      },
+      owner: {
+        _id: flight.userId,
+        name: user?.name ?? null,
+        image: ownerImage,
+      },
+      media,
+    };
+  },
+});
+
+export const getPublicUserProfile = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await authComponent.getAnyUserById(ctx, args.userId);
+    if (!user) return null;
+
+    // Resolve avatar
+    let image: string | null = null;
+    if (user.image) {
+      if (user.image.startsWith("http")) {
+        image = user.image;
+      } else {
+        const metadata = await r2.getMetadata(ctx, user.image);
+        image = metadata?.url ?? null;
+      }
+    }
+
+    // Get public flights
+    const flights = await ctx.db
+      .query("flights")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const publicFlights = flights
+      .filter((f) => f.isPublic)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return {
+      user: {
+        _id: user._id,
+        name: user.name,
+        image,
+      },
+      flights: publicFlights,
+    };
+  },
+});
+
 export const listPublicFlightLocations = query({
   args: {},
   handler: async (ctx) => {

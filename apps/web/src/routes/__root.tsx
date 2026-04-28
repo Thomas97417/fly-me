@@ -16,7 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
-import Header from "../components/header";
+import NavigationCard from "../components/navigation-card";
 import ErrorBoundary from "../components/error-boundary";
 import NotFound from "../components/not-found";
 import appCss from "../index.css?url";
@@ -97,9 +97,9 @@ function RootDocument() {
               disableTransitionOnChange
               storageKey="vite-ui-theme"
             >
-              <div className="grid h-svh grid-rows-[auto_1fr]">
-                <Header />
-                <div className="overflow-y-auto">
+              <div className="h-svh relative">
+                <NavigationCard />
+                <div className="h-full overflow-y-auto">
                   <Outlet />
                 </div>
               </div>

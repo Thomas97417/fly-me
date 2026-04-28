@@ -6,10 +6,10 @@ import z from "zod";
 import { authClient } from "@/lib/auth-client";
 
 import { GitHubLoginButton, GoogleLoginButton } from "./social-login-buttons";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import PasswordInput from "./ui/password-input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import PasswordInput from "../ui/password-input";
 
 export default function SignInForm() {
   const navigate = useNavigate({
@@ -149,7 +149,7 @@ export default function SignInForm() {
       </div>
 
       <div className="mt-4 text-center text-sm text-muted-foreground">
-        <span>Need an account?{" "}</span>
+        <span>Need an account? </span>
         <Link
           to="/sign-up"
           className="hover:underline hover:text-foreground cursor-pointer font-bold"

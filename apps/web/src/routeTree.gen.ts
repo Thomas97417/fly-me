@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FlightsIndexRouteImport } from './routes/flights/index'
+import { Route as UsersUserIdRouteImport } from './routes/users/$userId'
 import { Route as FlightsNewRouteImport } from './routes/flights/new'
 import { Route as FlightsFlightIdRouteImport } from './routes/flights/$flightId'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
@@ -46,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
 const FlightsIndexRoute = FlightsIndexRouteImport.update({
   id: '/flights/',
   path: '/flights/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersUserIdRoute = UsersUserIdRouteImport.update({
+  id: '/users/$userId',
+  path: '/users/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlightsNewRoute = FlightsNewRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof authVerifyEmailRoute
   '/flights/$flightId': typeof FlightsFlightIdRoute
   '/flights/new': typeof FlightsNewRoute
+  '/users/$userId': typeof UsersUserIdRoute
   '/flights/': typeof FlightsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof authVerifyEmailRoute
   '/flights/$flightId': typeof FlightsFlightIdRoute
   '/flights/new': typeof FlightsNewRoute
+  '/users/$userId': typeof UsersUserIdRoute
   '/flights': typeof FlightsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/flights/$flightId': typeof FlightsFlightIdRoute
   '/flights/new': typeof FlightsNewRoute
+  '/users/$userId': typeof UsersUserIdRoute
   '/flights/': typeof FlightsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/flights/$flightId'
     | '/flights/new'
+    | '/users/$userId'
     | '/flights/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/flights/$flightId'
     | '/flights/new'
+    | '/users/$userId'
     | '/flights'
     | '/api/auth/$'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/(auth)/verify-email'
     | '/flights/$flightId'
     | '/flights/new'
+    | '/users/$userId'
     | '/flights/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   authVerifyEmailRoute: typeof authVerifyEmailRoute
   FlightsFlightIdRoute: typeof FlightsFlightIdRoute
   FlightsNewRoute: typeof FlightsNewRoute
+  UsersUserIdRoute: typeof UsersUserIdRoute
   FlightsIndexRoute: typeof FlightsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/flights'
       fullPath: '/flights/'
       preLoaderRoute: typeof FlightsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users/$userId': {
+      id: '/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/users/$userId'
+      preLoaderRoute: typeof UsersUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flights/new': {
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   authVerifyEmailRoute: authVerifyEmailRoute,
   FlightsFlightIdRoute: FlightsFlightIdRoute,
   FlightsNewRoute: FlightsNewRoute,
+  UsersUserIdRoute: UsersUserIdRoute,
   FlightsIndexRoute: FlightsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
