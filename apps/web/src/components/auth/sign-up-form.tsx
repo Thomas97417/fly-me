@@ -6,10 +6,10 @@ import z from "zod";
 import { authClient } from "@/lib/auth-client";
 
 import { GitHubLoginButton, GoogleLoginButton } from "./social-login-buttons";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import PasswordInput from "./ui/password-input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import PasswordInput from "../ui/password-input";
 
 export default function SignUpForm() {
   const navigate = useNavigate({

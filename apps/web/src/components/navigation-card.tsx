@@ -1,0 +1,77 @@
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Authenticated, Unauthenticated } from "convex/react";
+import { ChevronLeft, ChevronRight, User } from "lucide-react";
+
+import UserMenu from "./user-menu";
+import UserAvatar from "./user-avatar";
+import { ModeToggle } from "./mode-toggle";
+
+const linkStyles =
+  "text-sm text-muted-foreground transition-colors hover:text-foreground [&.active]:text-foreground [&.active]:font-medium";
+
+function GuestAvatar() {
+  return (
+    <Link
+      to="/sign-in"
+      className="size-8 rounded-full bg-muted flex items-center justify-center"
+    >
+      <User className="size-4 text-muted-foreground" />
+    </Link>
+  );
+}
+
+export default function NavigationCard() {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="absolute top-6 right-6 z-20 pointer-events-auto">
+      <div className="flex items-center gap-2 rounded-2xl bg-background/70 backdrop-blur-md px-3 py-2 shadow-lg border border-border/50 transition-all duration-200 h-12">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {expanded ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronLeft className="size-4" />
+          )}
+        </button>
+
+        {expanded ? (
+          <>
+            <Authenticated>
+              <nav className="flex items-center gap-4">
+                <Link to="/flights" className={linkStyles}>
+                  Mes Vols
+                </Link>
+                <Link to="/settings" className={linkStyles}>
+                  Settings
+                </Link>
+              </nav>
+            </Authenticated>
+
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+              <Authenticated>
+                <UserMenu />
+              </Authenticated>
+              <Unauthenticated>
+                <GuestAvatar />
+              </Unauthenticated>
+            </div>
+          </>
+        ) : (
+          <>
+            <Authenticated>
+              <UserAvatar />
+            </Authenticated>
+            <Unauthenticated>
+              <GuestAvatar />
+            </Unauthenticated>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

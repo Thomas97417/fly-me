@@ -6,9 +6,9 @@ import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { useState } from "react";
 
 export default function VerifyEmailForm() {

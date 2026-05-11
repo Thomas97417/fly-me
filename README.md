@@ -1,6 +1,6 @@
-# my-better-t-app
+# FlyMe
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Convex, and more.
+This project was created with [TOMA-Stack](https://github.com/Thomas97417/my-better-t-app), a modern TypeScript stack that combines React, TanStack Start, Convex, and more.
 
 ## Features
 

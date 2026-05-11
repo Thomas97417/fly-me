@@ -12,12 +12,11 @@ import {
   Clock,
   Drone,
   Mountain,
-  Globe,
-  Lock,
+  MapPin,
   ArrowRight,
 } from "lucide-react";
 
-interface FlightCardProps {
+interface PublicFlightCardProps {
   flight: {
     _id: string;
     date: string;
@@ -26,7 +25,8 @@ interface FlightCardProps {
     droneModel?: string;
     durationMinutes?: number;
     maxAltitudeMeters?: number;
-    isPublic: boolean;
+    latitude?: number;
+    longitude?: number;
   };
 }
 
@@ -45,7 +45,7 @@ function Meta({
   );
 }
 
-export default function FlightCard({ flight }: FlightCardProps) {
+export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
   return (
     <Link to="/flights/$flightId" params={{ flightId: flight._id }}>
       <Card className="group h-full cursor-pointer transition-all hover:shadow-md hover:border-primary/20">
@@ -54,35 +54,32 @@ export default function FlightCard({ flight }: FlightCardProps) {
             {flight.locationName}
           </CardTitle>
           <CardAction>
-            {flight.isPublic ? (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Globe className="size-3" />
-                Public
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Lock className="size-3" />
-                Privé
-              </span>
-            )}
-          </CardAction>
-        </CardHeader>
-
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
-            <Meta icon={Calendar}>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calendar className="size-3" />
               {new Date(flight.date).toLocaleDateString("fr-FR", {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               })}
-            </Meta>
-            {flight.droneModel && <Meta icon={Drone}>{flight.droneModel}</Meta>}
+            </span>
+          </CardAction>
+        </CardHeader>
+
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
+            {flight.droneModel && (
+              <Meta icon={Drone}>{flight.droneModel}</Meta>
+            )}
             {flight.durationMinutes != null && (
               <Meta icon={Clock}>{flight.durationMinutes} min</Meta>
             )}
             {flight.maxAltitudeMeters != null && (
               <Meta icon={Mountain}>{flight.maxAltitudeMeters} m</Meta>
+            )}
+            {flight.latitude != null && flight.longitude != null && (
+              <Meta icon={MapPin}>
+                {flight.latitude.toFixed(2)}, {flight.longitude.toFixed(2)}
+              </Meta>
             )}
           </div>
 

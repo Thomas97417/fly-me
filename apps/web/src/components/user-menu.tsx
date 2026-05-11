@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "./ui/button";
+import UserAvatar from "./user-avatar";
 
 export default function UserMenu() {
   const user = useCurrentUser();
@@ -21,15 +21,7 @@ export default function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="outline" className="flex items-center gap-2 px-2" />
-        }
-      >
-        <span className="hidden text-sm font-medium sm:inline-block">
-          {user?.name}
-        </span>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger render={<UserAvatar />}></DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-card">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="font-normal">

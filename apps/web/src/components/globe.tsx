@@ -13,11 +13,12 @@ interface FlightPoint {
 
 interface GlobeProps {
   flights: FlightPoint[];
+  onFlightClick?: (flightId: string | null) => void;
 }
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
-export default function FlightGlobe({ flights }: GlobeProps) {
+export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -92,6 +93,10 @@ export default function FlightGlobe({ flights }: GlobeProps) {
     map.on("wheel", stopSpin);
     map.on("zoomstart", stopSpin);
 
+    map.on("click", () => {
+      if (onFlightClick) onFlightClick(null);
+    });
+
     map.on("load", () => {
       spinRef.current = requestAnimationFrame(spinGlobe);
     });
@@ -153,7 +158,14 @@ export default function FlightGlobe({ flights }: GlobeProps) {
         // Show popup on hover
         el.addEventListener("mouseenter", () => marker.togglePopup());
         el.addEventListener("mouseleave", () => marker.togglePopup());
-        el.addEventListener("click", () => navigateToFlight(flight._id));
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (onFlightClick) {
+            onFlightClick(flight._id);
+          } else {
+            navigateToFlight(flight._id);
+          }
+        });
 
         markersRef.current.push(marker);
       });
@@ -169,7 +181,7 @@ export default function FlightGlobe({ flights }: GlobeProps) {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
     };
-  }, [flights, navigateToFlight]);
+  }, [flights, navigateToFlight, onFlightClick]);
 
   return (
     <>
