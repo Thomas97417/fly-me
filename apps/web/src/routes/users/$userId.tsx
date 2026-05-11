@@ -1,24 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ArrowLeft,
-  User,
-  Drone,
-  MapPin,
-  Calendar,
-  Clock,
-  Mountain,
-  Globe,
-} from "lucide-react";
+import PublicFlightCard from "@/components/public-flight-card";
+import { ArrowLeft, User, Drone } from "lucide-react";
 
 export const Route = createFileRoute("/users/$userId")({
   head: () => ({
@@ -147,64 +133,7 @@ function UserProfilePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {flights.map((flight) => (
-            <Link
-              key={flight._id}
-              to="/flights/$flightId"
-              params={{ flightId: flight._id }}
-            >
-              <Card className="transition-all hover:bg-muted/50 hover:shadow-md cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-base truncate">
-                      {flight.locationName}
-                    </CardTitle>
-                    <Globe className="size-4 text-muted-foreground shrink-0" />
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2">
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="size-3" />
-                      {new Date(flight.date).toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                    {flight.droneModel && (
-                      <span className="flex items-center gap-1">
-                        <Drone className="size-3" />
-                        {flight.droneModel}
-                      </span>
-                    )}
-                    {flight.durationMinutes != null && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="size-3" />
-                        {flight.durationMinutes} min
-                      </span>
-                    )}
-                    {flight.maxAltitudeMeters != null && (
-                      <span className="flex items-center gap-1">
-                        <Mountain className="size-3" />
-                        {flight.maxAltitudeMeters} m
-                      </span>
-                    )}
-                    {flight.latitude != null && flight.longitude != null && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="size-3" />
-                        {flight.latitude.toFixed(2)},{" "}
-                        {flight.longitude.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                  {flight.description && (
-                    <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">
-                      {flight.description}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </Link>
+            <PublicFlightCard key={flight._id} flight={flight} />
           ))}
         </div>
       )}

@@ -107,7 +107,26 @@ export const getFlight = query({
       if (!user || user._id !== flight.userId) return null;
     }
 
-    return flight;
+    // Resolve owner info
+    const owner = await authComponent.getAnyUserById(ctx, flight.userId);
+    let ownerImage: string | null = null;
+    if (owner?.image) {
+      if (owner.image.startsWith("http")) {
+        ownerImage = owner.image;
+      } else {
+        const metadata = await r2.getMetadata(ctx, owner.image);
+        ownerImage = metadata?.url ?? null;
+      }
+    }
+
+    return {
+      ...flight,
+      owner: {
+        _id: flight.userId,
+        name: owner?.name ?? null,
+        image: ownerImage,
+      },
+    };
   },
 });
 

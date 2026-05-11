@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, LocateFixed, Loader2 } from "lucide-react";
+
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
 interface LocationPickerProps {
   locationName: string;
@@ -15,90 +19,92 @@ interface LocationPickerProps {
   }) => void;
 }
 
+function createMarkerElement() {
+  const el = document.createElement("div");
+  el.className = "flyme-marker";
+  el.innerHTML = `
+    <div class="flyme-marker-pin">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.4-.1.9.3 1.1L11 12l-2 3H6l-1 1 3 2 2 3 1-1v-3l3-2 3.6 7.4c.2.4.7.5 1.1.3l.5-.3c.4-.2.6-.6.5-1.1z"/>
+      </svg>
+    </div>
+    <div class="flyme-marker-tail"></div>
+  `;
+  return el;
+}
+
 export default function LocationPicker({
   locationName,
   latitude,
   longitude,
   onLocationChange,
 }: LocationPickerProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [mounted, setMounted] = useState(false);
+
+  function placeMarker(lng: number, lat: number, fly = false) {
+    const map = mapRef.current;
+    if (!map) return;
+    if (markerRef.current) {
+      markerRef.current.setLngLat([lng, lat]);
+    } else {
+      markerRef.current = new mapboxgl.Marker({
+        element: createMarkerElement(),
+        anchor: "bottom",
+      })
+        .setLngLat([lng, lat])
+        .addTo(map);
+    }
+    if (fly) {
+      map.flyTo({ center: [lng, lat], zoom: 13, duration: 1200 });
+    }
+  }
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (!containerRef.current || mapRef.current) return;
 
-  useEffect(() => {
-    if (!mounted || !mapRef.current || mapInstanceRef.current) return;
+    const hasInitial = latitude != null && longitude != null;
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: "mapbox://styles/mapbox/light-v11",
+      center: hasInitial ? [longitude!, latitude!] : [2.35, 46.85],
+      zoom: hasInitial ? 12 : 4,
+      attributionControl: false,
+    });
 
-    let cancelled = false;
+    map.addControl(
+      new mapboxgl.AttributionControl({ compact: true }),
+      "bottom-right",
+    );
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
-    async function initMap() {
-      const L = await import("leaflet");
-      await import("leaflet/dist/leaflet.css");
-
-      if (cancelled || !mapRef.current) return;
-
-      const defaultLat = latitude ?? 48.8566;
-      const defaultLng = longitude ?? 2.3522;
-
-      const map = L.map(mapRef.current).setView(
-        [defaultLat, defaultLng],
-        latitude ? 13 : 5
-      );
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(map);
-
-      const icon = L.icon({
-        iconUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        iconRetinaUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        shadowUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
+    map.on("click", (e) => {
+      const { lng, lat } = e.lngLat;
+      const roundedLat = Math.round(lat * 1000000) / 1000000;
+      const roundedLng = Math.round(lng * 1000000) / 1000000;
+      placeMarker(roundedLng, roundedLat);
+      onLocationChange({
+        locationName,
+        latitude: roundedLat,
+        longitude: roundedLng,
       });
+    });
 
-      if (latitude && longitude) {
-        markerRef.current = L.marker([latitude, longitude], { icon }).addTo(
-          map
-        );
-      }
+    mapRef.current = map;
 
-      map.on("click", (e: L.LeafletMouseEvent) => {
-        const { lat, lng } = e.latlng;
-        if (markerRef.current) {
-          markerRef.current.setLatLng([lat, lng]);
-        } else {
-          markerRef.current = L.marker([lat, lng], { icon }).addTo(map);
-        }
-        onLocationChange({
-          locationName,
-          latitude: Math.round(lat * 1000000) / 1000000,
-          longitude: Math.round(lng * 1000000) / 1000000,
-        });
-      });
-
-      mapInstanceRef.current = map;
+    if (hasInitial) {
+      map.on("load", () => placeMarker(longitude!, latitude!));
     }
 
-    initMap();
-
     return () => {
-      cancelled = true;
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        markerRef.current = null;
-      }
+      map.remove();
+      mapRef.current = null;
+      markerRef.current = null;
     };
-  }, [mounted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleGeolocate() {
     if (!navigator.geolocation) return;
@@ -107,78 +113,99 @@ export default function LocationPicker({
       (pos) => {
         const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
         const lng = Math.round(pos.coords.longitude * 1000000) / 1000000;
+        placeMarker(lng, lat, true);
         onLocationChange({ locationName, latitude: lat, longitude: lng });
-
-        if (mapInstanceRef.current) {
-          const L = (window as any).L;
-          mapInstanceRef.current.setView([lat, lng], 13);
-          if (markerRef.current) {
-            markerRef.current.setLatLng([lat, lng]);
-          } else if (L) {
-            markerRef.current = L.marker([lat, lng]).addTo(
-              mapInstanceRef.current
-            );
-          }
-        }
         setIsLocating(false);
       },
-      () => setIsLocating(false)
+      () => setIsLocating(false),
     );
   }
 
+  const hasCoords = latitude != null && longitude != null;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="locationName">
-          <MapPin className="inline size-4 mr-1" />
-          Nom du lieu
-        </Label>
-        <Input
-          id="locationName"
-          placeholder="ex: Parc de la Tête d'Or, Lyon"
-          value={locationName}
-          onChange={(e) =>
-            onLocationChange({
-              locationName: e.target.value,
-              latitude,
-              longitude,
-            })
-          }
-        />
+    <>
+      <style>{`
+        .flyme-marker {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+        }
+        .flyme-marker-pin {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          border: 2.5px solid white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35), 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+        .flyme-marker-tail {
+          width: 0;
+          height: 0;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-top: 8px solid #2563eb;
+          margin-top: -2px;
+          filter: drop-shadow(0 2px 2px rgba(37, 99, 235, 0.2));
+        }
+      `}</style>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="locationName" className="text-xs font-medium">
+            Nom du lieu
+          </Label>
+          <Input
+            id="locationName"
+            placeholder="ex: Parc de la Tête d'Or, Lyon"
+            value={locationName}
+            onChange={(e) =>
+              onLocationChange({
+                locationName: e.target.value,
+                latitude,
+                longitude,
+              })
+            }
+          />
+        </div>
+
+        <div className="relative w-full overflow-hidden rounded-lg border">
+          <div ref={containerRef} className="w-full h-72" />
+
+          {/* Floating actions */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleGeolocate}
+              disabled={isLocating}
+              className="gap-1.5 bg-background/90 backdrop-blur-sm shadow"
+            >
+              {isLocating ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <LocateFixed className="size-3.5" />
+              )}
+              Ma position
+            </Button>
+          </div>
+
+          {/* Hint / coords pill */}
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none z-10">
+            <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-muted-foreground inline-flex items-center gap-1.5">
+              <MapPin className="size-3" />
+              {hasCoords
+                ? `${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}`
+                : "Cliquez pour placer un marqueur"}
+            </span>
+          </div>
+        </div>
       </div>
-
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleGeolocate}
-          disabled={isLocating}
-        >
-          {isLocating ? (
-            <Loader2 className="size-4 animate-spin mr-1" />
-          ) : (
-            <LocateFixed className="size-4 mr-1" />
-          )}
-          Ma position
-        </Button>
-        {latitude !== undefined && longitude !== undefined && (
-          <span className="text-xs text-muted-foreground">
-            {latitude}, {longitude}
-          </span>
-        )}
-      </div>
-
-      {mounted && (
-        <div
-          ref={mapRef}
-          className="h-64 w-full rounded-lg border overflow-hidden"
-        />
-      )}
-
-      <p className="text-xs text-muted-foreground">
-        Cliquez sur la carte pour placer le marqueur.
-      </p>
-    </div>
+    </>
   );
 }
