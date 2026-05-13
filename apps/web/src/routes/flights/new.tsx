@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
+import { NumberInput } from "@/components/ui/number-input";
 import LocationPicker from "@/components/location-picker";
 import {
   Loader2,
@@ -108,8 +109,8 @@ function NewFlightPage() {
     longitude: undefined as number | undefined,
     description: "",
     droneModel: "",
-    durationMinutes: "",
-    maxAltitudeMeters: "",
+    durationMinutes: undefined as number | undefined,
+    maxAltitudeMeters: undefined as number | undefined,
     isPublic: true,
   });
 
@@ -129,12 +130,8 @@ function NewFlightPage() {
         longitude: form.longitude,
         description: form.description.trim() || undefined,
         droneModel: form.droneModel.trim() || undefined,
-        durationMinutes: form.durationMinutes
-          ? parseFloat(form.durationMinutes)
-          : undefined,
-        maxAltitudeMeters: form.maxAltitudeMeters
-          ? parseFloat(form.maxAltitudeMeters)
-          : undefined,
+        durationMinutes: form.durationMinutes,
+        maxAltitudeMeters: form.maxAltitudeMeters,
         isPublic: form.isPublic,
       });
       toast.success("Vol enregistré !");
@@ -244,34 +241,28 @@ function NewFlightPage() {
               />
             </Field>
             <Field htmlFor="duration" label="Durée (min)" icon={Clock}>
-              <Input
+              <NumberInput
                 id="duration"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="25"
+                min={0}
+                stepper={1}
+                placeholder="25 min"
+                suffix=" min"
                 value={form.durationMinutes}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    durationMinutes: e.target.value,
-                  }))
+                onValueChange={(v) =>
+                  setForm((prev) => ({ ...prev, durationMinutes: v }))
                 }
               />
             </Field>
             <Field htmlFor="altitude" label="Altitude max (m)" icon={Mountain}>
-              <Input
+              <NumberInput
                 id="altitude"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="120"
+                min={0}
+                stepper={5}
+                placeholder="120 m"
+                suffix=" m"
                 value={form.maxAltitudeMeters}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    maxAltitudeMeters: e.target.value,
-                  }))
+                onValueChange={(v) =>
+                  setForm((prev) => ({ ...prev, maxAltitudeMeters: v }))
                 }
               />
             </Field>
