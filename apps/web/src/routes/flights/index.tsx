@@ -4,7 +4,7 @@ import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import FlightCard from "@/components/flight-card";
-import { Plus, Drone, Globe, Lock } from "lucide-react";
+import { Plus, Drone, Globe, Lock, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/flights/")({
   head: () => ({
@@ -31,12 +31,14 @@ function StatBlock({
   icon?: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span className="text-lg font-semibold inline-flex items-center gap-1.5">
+    <div className="flex flex-col gap-0.5">
+      <span className="inline-flex items-center gap-1.5 text-xl font-semibold tracking-tight">
         {Icon && <Icon className="size-4 text-muted-foreground" />}
         {value}
       </span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
     </div>
   );
 }
@@ -46,13 +48,10 @@ function FlightsPage() {
 
   if (flights === undefined) {
     return (
-      <div className="container mx-auto max-w-3xl px-4 py-12">
-        <Skeleton className="h-8 w-40 mb-10" />
-        <div className="flex justify-center gap-8 mb-10">
-          <Skeleton className="h-10 w-16" />
-          <Skeleton className="h-10 w-16" />
-          <Skeleton className="h-10 w-16" />
-        </div>
+      <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
+        <Skeleton className="h-9 w-48 mb-3" />
+        <Skeleton className="h-4 w-64 mb-10" />
+        <Skeleton className="h-24 w-full rounded-2xl mb-10" />
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-36 rounded-2xl" />
@@ -63,39 +62,35 @@ function FlightsPage() {
   }
 
   const publicCount = flights.filter((f) => f.isPublic).length;
+  const privateCount = flights.length - publicCount;
   const totalDuration = flights.reduce(
     (sum, f) => sum + (f.durationMinutes ?? 0),
     0,
   );
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Header */}
-      <div className="flex items-end justify-between mb-10">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight">Mes Vols</h1>
-          <p className="text-sm text-muted-foreground">
-            Vos sorties drone enregistrées
-          </p>
+      <div className="mb-10 flex flex-col gap-1.5">
+        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <Drone className="size-3.5" />
+          Sorties drone
         </div>
-        <Link to="/flights/new">
-          <Button className="gap-1.5">
-            <Plus className="size-4" />
-            Nouveau vol
-          </Button>
-        </Link>
+        <h1 className="text-3xl font-bold tracking-tight">Mes Vols</h1>
       </div>
 
       {flights.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-          <Drone className="size-12 text-muted-foreground/40" />
+        <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md py-20 text-center shadow-sm">
+          <div className="flex size-14 items-center justify-center rounded-full bg-muted/60">
+            <Drone className="size-6 text-muted-foreground" />
+          </div>
           <div className="flex flex-col gap-1">
             <p className="font-medium">Aucun vol enregistré</p>
             <p className="text-sm text-muted-foreground">
               Commencez par ajouter votre première sortie drone.
             </p>
           </div>
-          <Link to="/flights/new" className="mt-2">
+          <Link to="/flights/new" className="mt-1">
             <Button className="gap-1.5">
               <Plus className="size-4" />
               Nouveau vol
@@ -104,30 +99,43 @@ function FlightsPage() {
         </div>
       ) : (
         <>
-          {/* Stats */}
-          <div className="flex items-center justify-center gap-8 mb-10 py-6 rounded-2xl bg-muted/30">
-            <StatBlock label="Vols" value={String(flights.length)} />
-            <div className="h-8 w-px bg-border" />
-            <StatBlock label="Publics" value={String(publicCount)} icon={Globe} />
-            {publicCount < flights.length && (
-              <>
-                <div className="h-8 w-px bg-border" />
-                <StatBlock
-                  label="Privés"
-                  value={String(flights.length - publicCount)}
-                  icon={Lock}
-                />
-              </>
-            )}
-            {totalDuration > 0 && (
-              <>
-                <div className="h-8 w-px bg-border" />
-                <StatBlock
-                  label="Minutes"
-                  value={String(Math.round(totalDuration))}
-                />
-              </>
-            )}
+          {/* Stats + CTA */}
+          <div className="mb-10 flex flex-col gap-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              <StatBlock label="Vols" value={String(flights.length)} />
+              <div className="hidden h-8 w-px bg-border sm:block" />
+              <StatBlock
+                label="Publics"
+                value={String(publicCount)}
+                icon={Globe}
+              />
+              {privateCount > 0 && (
+                <>
+                  <div className="hidden h-8 w-px bg-border sm:block" />
+                  <StatBlock
+                    label="Privés"
+                    value={String(privateCount)}
+                    icon={Lock}
+                  />
+                </>
+              )}
+              {totalDuration > 0 && (
+                <>
+                  <div className="hidden h-8 w-px bg-border sm:block" />
+                  <StatBlock
+                    label="Minutes"
+                    value={String(Math.round(totalDuration))}
+                    icon={Clock}
+                  />
+                </>
+              )}
+            </div>
+            <Link to="/flights/new" className="sm:shrink-0">
+              <Button className="w-full gap-1.5 sm:w-auto">
+                <Plus className="size-4" />
+                Nouveau vol
+              </Button>
+            </Link>
           </div>
 
           {/* Grid */}

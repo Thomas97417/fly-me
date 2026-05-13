@@ -18,6 +18,8 @@ import {
   Mountain,
   FileText,
   Globe,
+  MapPin,
+  Plus,
 } from "lucide-react";
 
 export const Route = createFileRoute("/flights/new")({
@@ -35,18 +37,25 @@ export const Route = createFileRoute("/flights/new")({
   component: NewFlightPage,
 });
 
-function SectionTitle({
+function FormCard({
   icon: Icon,
+  label,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  label: string;
   children: React.ReactNode;
 }) {
   return (
-    <h2 className="flex items-center gap-2 text-sm font-medium">
-      <Icon className="size-4 text-muted-foreground" />
-      {children}
-    </h2>
+    <section className="flex flex-col gap-3">
+      <div className="inline-flex items-center gap-2 px-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <Icon className="size-3.5" />
+        {label}
+      </div>
+      <div className="flex flex-col gap-5 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-6 shadow-sm">
+        {children}
+      </div>
+    </section>
   );
 }
 
@@ -126,11 +135,11 @@ function NewFlightPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-12">
-      {/* Top bar */}
-      <div className="flex items-center mb-8">
+    <div className="container mx-auto max-w-3xl px-4 pt-24 pb-16">
+      {/* Back link */}
+      <div className="mb-6">
         <Link to="/flights">
-          <Button variant="ghost" size="sm" className="gap-1.5">
+          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2">
             <ArrowLeft className="size-4" />
             Mes vols
           </Button>
@@ -138,17 +147,19 @@ function NewFlightPage() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col gap-1 mb-10">
-        <h1 className="text-2xl font-bold tracking-tight">Nouveau vol</h1>
+      <div className="mb-10 flex flex-col gap-1.5">
+        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <Plus className="size-3.5" />
+          Nouvelle sortie
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">Nouveau vol</h1>
         <p className="text-sm text-muted-foreground">
           Enregistrez les détails de votre sortie drone.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-10">
-        {/* Location */}
-        <section className="flex flex-col gap-4">
-          <SectionTitle icon={Globe}>Localisation</SectionTitle>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+        <FormCard icon={MapPin} label="Localisation">
           <LocationPicker
             locationName={form.locationName}
             latitude={form.latitude}
@@ -162,13 +173,10 @@ function NewFlightPage() {
               }))
             }
           />
-        </section>
+        </FormCard>
 
-        {/* Details */}
-        <section className="flex flex-col gap-4">
-          <SectionTitle icon={Drone}>Détails du vol</SectionTitle>
-
-          <div className="grid grid-cols-2 gap-3">
+        <FormCard icon={Drone} label="Détails du vol">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field htmlFor="date" label="Date" icon={Calendar}>
               <Input
                 id="date"
@@ -231,7 +239,7 @@ function NewFlightPage() {
               id="description"
               placeholder="Notes sur le vol, conditions météo..."
               rows={4}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+              className="flex w-full rounded-lg border border-input bg-transparent dark:bg-input/30 px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:border-ring resize-none"
               value={form.description}
               onChange={(e) =>
                 setForm((prev) => ({
@@ -241,14 +249,12 @@ function NewFlightPage() {
               }
             />
           </Field>
-        </section>
+        </FormCard>
 
-        {/* Visibility */}
-        <section className="flex flex-col gap-4">
-          <SectionTitle icon={Globe}>Visibilité</SectionTitle>
+        <FormCard icon={Globe} label="Visibilité">
           <label
             htmlFor="isPublic"
-            className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/20 p-4 cursor-pointer transition-colors hover:bg-muted/40"
           >
             <Checkbox
               id="isPublic"
@@ -268,10 +274,10 @@ function NewFlightPage() {
               </span>
             </div>
           </label>
-        </section>
+        </FormCard>
 
         {/* Submit */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t">
+        <div className="flex items-center justify-end gap-2 pt-2">
           <Link to="/flights">
             <Button variant="ghost" type="button">
               Annuler

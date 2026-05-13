@@ -8,7 +8,7 @@ export function SettingsCard({
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-start rounded-lg border border-border bg-card",
+        "flex w-full flex-col items-start overflow-hidden rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md shadow-sm",
         className,
       )}
       {...props}
@@ -26,7 +26,7 @@ export function SettingsCardContent({
   className?: string;
 }) {
   return (
-    <div className={cn("flex w-full flex-col gap-4 p-6", className)}>
+    <div className={cn("flex w-full flex-col gap-5 p-6", className)}>
       {children}
     </div>
   );
@@ -42,7 +42,7 @@ export function SettingsCardFooter({
   return (
     <div
       className={cn(
-        "flex min-h-14 w-full items-center justify-between rounded-b-lg border-t border-border bg-muted px-6",
+        "flex min-h-14 w-full items-center justify-between gap-4 border-t border-border/50 bg-muted/30 px-6 py-3",
         className,
       )}
     >
@@ -60,7 +60,7 @@ export function SettingsCardHeader({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <h2 className="text-lg font-medium">{title}</h2>
+      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
       <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );

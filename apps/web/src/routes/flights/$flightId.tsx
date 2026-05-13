@@ -158,23 +158,39 @@ function FlightDetailPage() {
       {/* Hero */}
       <div className="flex flex-col items-center gap-4 mb-10 text-center">
         {/* Owner avatar */}
-        <Link
-          to="/users/$userId"
-          params={{ userId: flight.owner._id }}
-          className="group"
-        >
-          <div className="size-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
-            {flight.owner.image ? (
-              <img
-                src={flight.owner.image}
-                alt={flight.owner.name ?? ""}
-                className="size-full object-cover"
-              />
-            ) : (
-              <User className="size-6 text-muted-foreground" />
-            )}
-          </div>
-        </Link>
+        {isOwner ? (
+          <Link to="/flights" className="group">
+            <div className="size-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
+              {flight.owner.image ? (
+                <img
+                  src={flight.owner.image}
+                  alt={flight.owner.name ?? ""}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <User className="size-6 text-muted-foreground" />
+              )}
+            </div>
+          </Link>
+        ) : (
+          <Link
+            to="/users/$userId"
+            params={{ userId: flight.owner._id }}
+            className="group"
+          >
+            <div className="size-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
+              {flight.owner.image ? (
+                <img
+                  src={flight.owner.image}
+                  alt={flight.owner.name ?? ""}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <User className="size-6 text-muted-foreground" />
+              )}
+            </div>
+          </Link>
+        )}
 
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">

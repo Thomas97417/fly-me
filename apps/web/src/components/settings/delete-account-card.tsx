@@ -43,14 +43,14 @@ export default function DeleteAccountCard() {
   };
 
   return (
-    <SettingsCard className="border-destructive">
+    <SettingsCard className="border-destructive/40">
       <SettingsCardContent>
         <SettingsCardHeader
           title="Delete Account"
           description="Permanently delete your account and all associated data. This action cannot be undone."
         />
       </SettingsCardContent>
-      <SettingsCardFooter className="bg-destructive/10 dark:bg-destructive/10">
+      <SettingsCardFooter className="border-destructive/30 bg-destructive/5 dark:bg-destructive/10">
         <p className="text-sm text-muted-foreground">Proceed with caution.</p>
         <AlertDialog>
           <AlertDialogTrigger

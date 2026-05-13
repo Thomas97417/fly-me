@@ -40,16 +40,19 @@ export default function NavigationCard() {
 
         {expanded ? (
           <>
-            <Authenticated>
-              <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-4">
+              <Link to="/" className={linkStyles} activeOptions={{ exact: true }}>
+                Carte
+              </Link>
+              <Authenticated>
                 <Link to="/flights" className={linkStyles}>
                   Mes Vols
                 </Link>
                 <Link to="/settings" className={linkStyles}>
                   Settings
                 </Link>
-              </nav>
-            </Authenticated>
+              </Authenticated>
+            </nav>
 
             <div className="flex items-center gap-2">
               <ModeToggle />

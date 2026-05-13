@@ -27,7 +27,42 @@ interface PublicFlightCardProps {
     maxAltitudeMeters?: number;
     latitude?: number;
     longitude?: number;
+    previews?: Array<{ _id: string; url: string | null }>;
   };
+}
+
+function PreviewStrip({
+  previews,
+}: {
+  previews?: Array<{ _id: string; url: string | null }>;
+}) {
+  const valid = previews?.filter((p) => p.url) ?? [];
+
+  if (valid.length === 0) {
+    return (
+      <div className="-mt-5 relative flex aspect-[16/9] items-center justify-center overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-muted/40">
+        <Drone className="size-10 text-muted-foreground/30 transition-transform duration-300 group-hover:scale-110" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="-mt-5 grid aspect-[16/9] gap-px bg-border/50"
+      style={{ gridTemplateColumns: `repeat(${valid.length}, minmax(0, 1fr))` }}
+    >
+      {valid.map((p) => (
+        <div key={p._id} className="relative overflow-hidden bg-muted">
+          <img
+            src={p.url!}
+            alt=""
+            loading="lazy"
+            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function Meta({
@@ -38,7 +73,7 @@ function Meta({
   children: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-2 py-0.5 text-muted-foreground">
       <Icon className="size-3 shrink-0" />
       {children}
     </span>
@@ -48,14 +83,16 @@ function Meta({
 export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
   return (
     <Link to="/flights/$flightId" params={{ flightId: flight._id }}>
-      <Card className="group h-full cursor-pointer transition-all hover:shadow-md hover:border-primary/20">
+      <Card className="group h-full cursor-pointer gap-3 overflow-hidden rounded-2xl border border-border bg-card py-5 ring-0 transition-all duration-200 hover:border-primary/40 hover:shadow-lg dark:hover:shadow-primary/5">
+        <PreviewStrip previews={flight.previews} />
         <CardHeader>
-          <CardTitle className="text-base font-semibold truncate">
-            {flight.locationName}
+          <CardTitle className="inline-flex items-center gap-1.5 text-base font-semibold truncate">
+            <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate">{flight.locationName}</span>
           </CardTitle>
           <CardAction>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="size-3" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              <Calendar className="size-2.5" />
               {new Date(flight.date).toLocaleDateString("fr-FR", {
                 day: "numeric",
                 month: "short",
@@ -66,10 +103,8 @@ export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
-            {flight.droneModel && (
-              <Meta icon={Drone}>{flight.droneModel}</Meta>
-            )}
+          <div className="flex flex-wrap gap-1.5 text-xs">
+            {flight.droneModel && <Meta icon={Drone}>{flight.droneModel}</Meta>}
             {flight.durationMinutes != null && (
               <Meta icon={Clock}>{flight.durationMinutes} min</Meta>
             )}
@@ -91,7 +126,7 @@ export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
         </CardContent>
 
         <CardFooter className="pt-0 border-t-0">
-          <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-primary">
             Voir le vol
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
