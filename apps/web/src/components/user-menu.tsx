@@ -21,12 +21,14 @@ export default function UserMenu() {
 
   const metadata = useQuery(
     api.r2.getMetadata,
-    user?.image && !user.image.startsWith("http") ? { key: user.image } : "skip",
+    user?.image && !user.image.startsWith("http")
+      ? { key: user.image }
+      : "skip",
   );
 
   const imageUrl = user?.image?.startsWith("http")
     ? user.image
-    : metadata?.url ?? null;
+    : (metadata?.url ?? null);
 
   return (
     <DropdownMenu>
@@ -68,11 +70,12 @@ export default function UserMenu() {
         <DropdownMenuItem
           className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
           onClick={() =>
-            user && navigate({ to: "/users/$userId", params: { userId: user._id } })
+            user &&
+            navigate({ to: "/users/$userId", params: { userId: user._id } })
           }
         >
           <UserRound className="mr-2 size-4 text-muted-foreground" />
-          Mon profil
+          Mon Profil
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -80,7 +83,7 @@ export default function UserMenu() {
           onClick={() => navigate({ to: "/flights" })}
         >
           <Drone className="mr-2 size-4 text-muted-foreground" />
-          Mes vols
+          Mes Vols
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -101,7 +104,6 @@ export default function UserMenu() {
               fetchOptions: {
                 onSuccess: () => {
                   navigate({ to: "/" });
-                  location.reload();
                 },
               },
             });

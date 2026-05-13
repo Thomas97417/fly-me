@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  Link,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -64,7 +60,7 @@ function FlightDetailPage() {
 
   if (flight === undefined) {
     return (
-      <div className="container mx-auto max-w-3xl px-4 py-12">
+      <div className="container mx-auto max-w-4xl px-4 py-12">
         <Skeleton className="h-8 w-32 mb-10" />
         <div className="flex flex-col items-center gap-4 mb-10">
           <Skeleton className="size-16 rounded-full" />
@@ -144,7 +140,7 @@ function FlightDetailPage() {
   }>;
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="container mx-auto max-w-4xl px-4 py-12">
       {/* Top bar */}
       <div className="flex items-center mb-10">
         <Link to="/flights">
@@ -224,9 +220,7 @@ function FlightDetailPage() {
       <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-8">
         {infoItems.map((item, i) => (
           <div key={item.label} className="flex items-center gap-5">
-            {i > 0 && (
-              <span className="text-border">·</span>
-            )}
+            {i > 0 && <span className="text-border">·</span>}
             <InfoItem icon={item.icon} value={item.value} />
           </div>
         ))}

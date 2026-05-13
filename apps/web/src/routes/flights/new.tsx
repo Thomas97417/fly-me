@@ -1,18 +1,27 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Popover } from "@base-ui/react/popover";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
 import LocationPicker from "@/components/location-picker";
 import {
   Loader2,
   Save,
   ArrowLeft,
-  Calendar,
+  Calendar as CalendarIcon,
   Drone,
   Clock,
   Mountain,
@@ -26,7 +35,10 @@ export const Route = createFileRoute("/flights/new")({
   head: () => ({
     meta: [
       { title: "Nouveau Vol — FlyMe" },
-      { name: "description", content: "Enregistrez une nouvelle sortie drone." },
+      {
+        name: "description",
+        content: "Enregistrez une nouvelle sortie drone.",
+      },
     ],
   }),
   beforeLoad: async ({ context }) => {
@@ -135,7 +147,7 @@ function NewFlightPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 pt-24 pb-16">
+    <div className="container mx-auto max-w-4xl px-4 py-12">
       {/* Back link */}
       <div className="mb-6">
         <Link to="/flights">
@@ -177,15 +189,46 @@ function NewFlightPage() {
 
         <FormCard icon={Drone} label="Détails du vol">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field htmlFor="date" label="Date" icon={Calendar}>
-              <Input
-                id="date"
-                type="date"
-                value={form.date}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, date: e.target.value }))
-                }
-              />
+            <Field htmlFor="date" label="Date" icon={CalendarIcon}>
+              <Popover.Root>
+                <Popover.Trigger
+                  render={
+                    <Button
+                      id="date"
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start font-normal"
+                    >
+                      <CalendarIcon className="size-3.5 text-muted-foreground" />
+                      {form.date
+                        ? format(parseISO(form.date), "d MMMM yyyy", {
+                            locale: fr,
+                          })
+                        : "Sélectionner une date"}
+                    </Button>
+                  }
+                />
+                <Popover.Portal>
+                  <Popover.Positioner sideOffset={6} align="start">
+                    <Popover.Popup className="z-50 rounded-xl border border-border/50 bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95">
+                      <Calendar
+                        mode="single"
+                        selected={form.date ? parseISO(form.date) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setForm((prev) => ({
+                              ...prev,
+                              date: format(date, "yyyy-MM-dd"),
+                            }));
+                          }
+                        }}
+                        locale={fr}
+                        captionLayout="dropdown"
+                      />
+                    </Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
             </Field>
             <Field htmlFor="droneModel" label="Modèle de drone" icon={Drone}>
               <Input
