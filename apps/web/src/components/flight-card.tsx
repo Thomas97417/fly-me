@@ -84,7 +84,7 @@ function Meta({
 export default function FlightCard({ flight }: FlightCardProps) {
   return (
     <Link to="/flights/$flightId" params={{ flightId: flight._id }}>
-      <Card className="group h-full cursor-pointer gap-3 overflow-hidden rounded-2xl border border-border bg-card py-5 ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg dark:hover:shadow-primary/5">
+      <Card className="group h-full cursor-pointer gap-3 overflow-hidden rounded-2xl border border-border bg-card py-5 ring-0 transition-all duration-200 hover:border-primary/40 hover:shadow-lg dark:hover:shadow-primary/5">
         <PreviewStrip previews={flight.previews} />
         <CardHeader>
           <CardTitle className="inline-flex items-center gap-1.5 text-base font-semibold truncate">

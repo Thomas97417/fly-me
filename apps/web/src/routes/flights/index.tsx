@@ -91,8 +91,11 @@ function FlightsPage() {
             </p>
           </div>
           <Link to="/flights/new" className="mt-1">
-            <Button className="gap-1.5">
-              <Plus className="size-4" />
+            <Button
+              size="lg"
+              className="group gap-2 px-4 shadow-sm transition-all hover:shadow-md hover:shadow-primary/20"
+            >
+              <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
               Nouveau vol
             </Button>
           </Link>
@@ -131,7 +134,10 @@ function FlightsPage() {
               )}
             </div>
             <Link to="/flights/new" className="sm:shrink-0">
-              <Button className="w-full gap-1.5 sm:w-auto">
+              <Button
+                size="lg"
+                className="w-full gap-2 px-4 shadow-sm transition-all hover:shadow-md hover:shadow-primary/20 sm:w-auto cursor-pointer"
+              >
                 <Plus className="size-4" />
                 Nouveau vol
               </Button>

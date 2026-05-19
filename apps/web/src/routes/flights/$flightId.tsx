@@ -17,9 +17,24 @@ import {
   Trash2,
   ArrowLeft,
   User,
+  FileText,
+  Images,
+  TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/flights/$flightId")({
   head: () => ({
@@ -34,17 +49,81 @@ export const Route = createFileRoute("/flights/$flightId")({
   component: FlightDetailPage,
 });
 
-function InfoItem({
+function StatCard({
   icon: Icon,
+  label,
   value,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  label: string;
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <Icon className="size-3.5 text-muted-foreground/60 shrink-0" />
-      <span className="text-muted-foreground">{value}</span>
+    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-4 shadow-sm">
+      <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <Icon className="size-3.5" />
+        {label}
+      </div>
+      <p className="text-sm font-semibold tracking-tight">{value}</p>
+    </div>
+  );
+}
+
+function SectionCard({
+  icon: Icon,
+  label,
+  action,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between px-1">
+        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <Icon className="size-3.5" />
+          {label}
+        </div>
+        {action}
+      </div>
+      <div className="rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-6 shadow-sm">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function OwnerAvatar({
+  image,
+  name,
+  size = "md",
+}: {
+  image: string | null;
+  name: string | null;
+  size?: "sm" | "md" | "lg";
+}) {
+  const sizeClasses = {
+    sm: "size-8",
+    md: "size-14",
+    lg: "size-20",
+  }[size];
+  const iconSize = {
+    sm: "size-4",
+    md: "size-6",
+    lg: "size-8",
+  }[size];
+  return (
+    <div
+      className={`${sizeClasses} rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all`}
+    >
+      {image ? (
+        <img src={image} alt={name ?? ""} className="size-full object-cover" />
+      ) : (
+        <User className={`${iconSize} text-muted-foreground`} />
+      )}
     </div>
   );
 }
@@ -61,30 +140,42 @@ function FlightDetailPage() {
   if (flight === undefined) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12">
-        <Skeleton className="h-8 w-32 mb-10" />
+        <Skeleton className="h-8 w-24 mb-10" />
         <div className="flex flex-col items-center gap-4 mb-10">
-          <Skeleton className="size-16 rounded-full" />
-          <Skeleton className="h-8 w-64" />
+          <Skeleton className="size-20 rounded-full" />
+          <Skeleton className="h-9 w-64" />
           <Skeleton className="h-5 w-40" />
         </div>
-        <div className="flex justify-center gap-6 mb-8">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-16" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-2xl" />
+          ))}
         </div>
-        <Skeleton className="h-64 rounded-lg" />
+        <Skeleton className="h-48 rounded-2xl" />
       </div>
     );
   }
 
   if (flight === null) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-24">
-        <Drone className="size-12 text-muted-foreground/40" />
-        <p className="text-muted-foreground">Vol introuvable.</p>
-        <Link to="/flights">
-          <Button variant="outline">Retour aux vols</Button>
-        </Link>
+      <div className="container mx-auto max-w-4xl px-4 py-12">
+        <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md py-20 text-center shadow-sm">
+          <div className="flex size-14 items-center justify-center rounded-full bg-muted/60">
+            <Drone className="size-6 text-muted-foreground" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="font-medium">Vol introuvable</p>
+            <p className="text-sm text-muted-foreground">
+              Ce vol n'existe pas ou n'est plus accessible.
+            </p>
+          </div>
+          <Link to="/flights" className="mt-1">
+            <Button variant="outline" className="gap-1.5">
+              <ArrowLeft className="size-4" />
+              Retour aux vols
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -92,7 +183,6 @@ function FlightDetailPage() {
   const isOwner = user?._id === flight.userId;
 
   async function handleDelete() {
-    if (!confirm("Supprimer ce vol et tous ses médias ?")) return;
     try {
       await deleteFlight({ flightId: flight!._id });
       toast.success("Vol supprimé.");
@@ -102,7 +192,11 @@ function FlightDetailPage() {
     }
   }
 
-  const infoItems = [
+  const stats: Array<{
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    value: string;
+  }> = [
     {
       icon: Calendar,
       label: "Date",
@@ -113,38 +207,38 @@ function FlightDetailPage() {
         day: "numeric",
       }),
     },
-    flight.droneModel
-      ? { icon: Drone, label: "Drone", value: flight.droneModel }
-      : null,
-    flight.durationMinutes != null
-      ? { icon: Clock, label: "Durée", value: `${flight.durationMinutes} min` }
-      : null,
-    flight.maxAltitudeMeters != null
-      ? {
-          icon: Mountain,
-          label: "Altitude max",
-          value: `${flight.maxAltitudeMeters} m`,
-        }
-      : null,
-    flight.latitude != null && flight.longitude != null
-      ? {
-          icon: MapPin,
-          label: "Coordonnées",
-          value: `${flight.latitude.toFixed(4)}, ${flight.longitude.toFixed(4)}`,
-        }
-      : null,
-  ].filter(Boolean) as Array<{
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    value: string;
-  }>;
+  ];
+  if (flight.droneModel) {
+    stats.push({ icon: Drone, label: "Drone", value: flight.droneModel });
+  }
+  if (flight.durationMinutes != null) {
+    stats.push({
+      icon: Clock,
+      label: "Durée",
+      value: `${flight.durationMinutes} min`,
+    });
+  }
+  if (flight.maxAltitudeMeters != null) {
+    stats.push({
+      icon: Mountain,
+      label: "Altitude max",
+      value: `${flight.maxAltitudeMeters} m`,
+    });
+  }
+  if (flight.latitude != null && flight.longitude != null) {
+    stats.push({
+      icon: MapPin,
+      label: "Coordonnées",
+      value: `${flight.latitude.toFixed(4)}, ${flight.longitude.toFixed(4)}`,
+    });
+  }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12">
-      {/* Top bar */}
-      <div className="flex items-center mb-10">
+      {/* Back link */}
+      <div className="mb-6">
         <Link to="/flights">
-          <Button variant="ghost" size="sm" className="gap-1.5">
+          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2">
             <ArrowLeft className="size-4" />
             Mes vols
           </Button>
@@ -152,21 +246,19 @@ function FlightDetailPage() {
       </div>
 
       {/* Hero */}
-      <div className="flex flex-col items-center gap-4 mb-10 text-center">
-        {/* Owner avatar */}
+      <div className="mb-10 flex flex-col items-center gap-4 text-center">
+        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <Drone className="size-3.5" />
+          Sortie drone
+        </div>
+
         {isOwner ? (
           <Link to="/flights" className="group">
-            <div className="size-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
-              {flight.owner.image ? (
-                <img
-                  src={flight.owner.image}
-                  alt={flight.owner.name ?? ""}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <User className="size-6 text-muted-foreground" />
-              )}
-            </div>
+            <OwnerAvatar
+              image={flight.owner.image}
+              name={flight.owner.name}
+              size="lg"
+            />
           </Link>
         ) : (
           <Link
@@ -174,25 +266,19 @@ function FlightDetailPage() {
             params={{ userId: flight.owner._id }}
             className="group"
           >
-            <div className="size-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
-              {flight.owner.image ? (
-                <img
-                  src={flight.owner.image}
-                  alt={flight.owner.name ?? ""}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <User className="size-6 text-muted-foreground" />
-              )}
-            </div>
+            <OwnerAvatar
+              image={flight.owner.image}
+              name={flight.owner.name}
+              size="lg"
+            />
           </Link>
         )}
 
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
             {flight.locationName}
           </h1>
-          <div className="flex items-center justify-center gap-2 mt-2">
+          <div className="flex items-center justify-center gap-2.5">
             <Link
               to="/users/$userId"
               params={{ userId: flight.owner._id }}
@@ -201,14 +287,20 @@ function FlightDetailPage() {
               {flight.owner.name ?? "Pilote"}
             </Link>
             <span className="text-muted-foreground/40">·</span>
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
+                flight.isPublic
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "bg-muted/80 text-muted-foreground"
+              }`}
+            >
               {flight.isPublic ? (
                 <>
-                  <Globe className="size-3" /> Public
+                  <Globe className="size-2.5" /> Public
                 </>
               ) : (
                 <>
-                  <Lock className="size-3" /> Privé
+                  <Lock className="size-2.5" /> Privé
                 </>
               )}
             </span>
@@ -216,47 +308,74 @@ function FlightDetailPage() {
         </div>
       </div>
 
-      {/* Info */}
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-8">
-        {infoItems.map((item, i) => (
-          <div key={item.label} className="flex items-center gap-5">
-            {i > 0 && <span className="text-border">·</span>}
-            <InfoItem icon={item.icon} value={item.value} />
-          </div>
+      {/* Stats grid */}
+      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {stats.map((s) => (
+          <StatCard
+            key={s.label}
+            icon={s.icon}
+            label={s.label}
+            value={s.value}
+          />
         ))}
       </div>
 
       {/* Description */}
       {flight.description && (
-        <div className="mb-8">
-          <h2 className="text-sm font-medium mb-2">Description</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-            {flight.description}
-          </p>
+        <div className="mb-10">
+          <SectionCard icon={FileText} label="Description">
+            <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">
+              {flight.description}
+            </p>
+          </SectionCard>
         </div>
       )}
 
       {/* Media */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">Médias</h2>
-        </div>
-        <MediaGallery flightId={flight._id} isOwner={isOwner} />
-        {isOwner && <MediaUpload flightId={flight._id} />}
+      <div className="mb-10">
+        <SectionCard icon={Images} label="Médias">
+          <div className="flex flex-col gap-4">
+            <MediaGallery flightId={flight._id} isOwner={isOwner} />
+            {isOwner && <MediaUpload flightId={flight._id} />}
+          </div>
+        </SectionCard>
       </div>
 
       {/* Delete */}
       {isOwner && (
-        <div className="flex justify-center mt-10">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleDelete}
-          >
-            <Trash2 className="size-4" />
-            Supprimer ce vol
-          </Button>
+        <div className="flex justify-center">
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                />
+              }
+            >
+              <Trash2 className="size-4" />
+              Supprimer ce vol
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogMedia>
+                  <TriangleAlert className="size-5" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>Supprimer ce vol ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est définitive. Le vol et tous ses médias seront
+                  supprimés immédiatement.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>

@@ -39,8 +39,9 @@ export default function UserMenu() {
       />
       <DropdownMenuContent
         align="end"
+        alignOffset={-12}
         sideOffset={10}
-        className="w-64 rounded-2xl border border-border/50 bg-background/95 p-1.5 shadow-lg backdrop-blur-md"
+        className="w-64 rounded-2xl border border-border/50 bg-background/70 p-1.5 shadow-lg ring-0 backdrop-blur-md"
       >
         {/* User header */}
         <div className="flex items-center gap-3 px-2.5 py-2.5">

@@ -41,7 +41,11 @@ export default function NavigationCard() {
         {expanded ? (
           <>
             <nav className="flex items-center gap-4">
-              <Link to="/" className={linkStyles} activeOptions={{ exact: true }}>
+              <Link
+                to="/"
+                className={linkStyles}
+                activeOptions={{ exact: true }}
+              >
                 Carte
               </Link>
               <Authenticated>
@@ -67,7 +71,7 @@ export default function NavigationCard() {
         ) : (
           <>
             <Authenticated>
-              <UserAvatar />
+              <UserMenu />
             </Authenticated>
             <Unauthenticated>
               <GuestAvatar />
