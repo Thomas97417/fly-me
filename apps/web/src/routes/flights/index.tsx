@@ -1,10 +1,10 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import FlightCard from "@/components/flight-card";
-import { Plus, Drone, Globe, Lock, Clock } from "lucide-react";
+import FlightCard from "@/components/flight/flight-card";
+import { Drone, Globe, Lock, Clock } from "lucide-react";
+import { NewFlyButton } from "@/components/flight/new-fly-button";
 
 export const Route = createFileRoute("/flights/")({
   head: () => ({
@@ -90,15 +90,7 @@ function FlightsPage() {
               Commencez par ajouter votre première sortie drone.
             </p>
           </div>
-          <Link to="/flights/new" className="mt-1">
-            <Button
-              size="lg"
-              className="group gap-2 px-4 shadow-sm transition-all hover:shadow-md hover:shadow-primary/20"
-            >
-              <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
-              Nouveau vol
-            </Button>
-          </Link>
+          <NewFlyButton />
         </div>
       ) : (
         <>
@@ -133,15 +125,7 @@ function FlightsPage() {
                 </>
               )}
             </div>
-            <Link to="/flights/new" className="sm:shrink-0">
-              <Button
-                size="lg"
-                className="w-full gap-2 px-4 shadow-sm transition-all hover:shadow-md hover:shadow-primary/20 sm:w-auto cursor-pointer"
-              >
-                <Plus className="size-4" />
-                Nouveau vol
-              </Button>
-            </Link>
+            <NewFlyButton />
           </div>
 
           {/* Grid */}

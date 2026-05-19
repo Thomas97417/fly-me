@@ -14,27 +14,15 @@ import {
   Mountain,
   Globe,
   Lock,
-  Trash2,
   ArrowLeft,
-  User,
   FileText,
   Images,
-  TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
+import OwnerAvatar from "@/components/ui/owner-avatar";
+import { DeleteFlightDialog } from "@/components/flight/delete-flight-dialog";
 
 export const Route = createFileRoute("/flights/$flightId")({
   head: () => ({
@@ -93,38 +81,6 @@ function SectionCard({
         {children}
       </div>
     </section>
-  );
-}
-
-function OwnerAvatar({
-  image,
-  name,
-  size = "md",
-}: {
-  image: string | null;
-  name: string | null;
-  size?: "sm" | "md" | "lg";
-}) {
-  const sizeClasses = {
-    sm: "size-8",
-    md: "size-14",
-    lg: "size-20",
-  }[size];
-  const iconSize = {
-    sm: "size-4",
-    md: "size-6",
-    lg: "size-8",
-  }[size];
-  return (
-    <div
-      className={`${sizeClasses} rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all`}
-    >
-      {image ? (
-        <img src={image} alt={name ?? ""} className="size-full object-cover" />
-      ) : (
-        <User className={`${iconSize} text-muted-foreground`} />
-      )}
-    </div>
   );
 }
 
@@ -344,38 +300,7 @@ function FlightDetailPage() {
       {/* Delete */}
       {isOwner && (
         <div className="flex justify-center">
-          <AlertDialog>
-            <AlertDialogTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                />
-              }
-            >
-              <Trash2 className="size-4" />
-              Supprimer ce vol
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogMedia>
-                  <TriangleAlert className="size-5" />
-                </AlertDialogMedia>
-                <AlertDialogTitle>Supprimer ce vol ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cette action est définitive. Le vol et tous ses médias seront
-                  supprimés immédiatement.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction variant="destructive" onClick={handleDelete}>
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteFlightDialog />
         </div>
       )}
     </div>

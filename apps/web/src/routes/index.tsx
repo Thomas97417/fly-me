@@ -6,8 +6,8 @@ import type {
 } from "@my-better-t-app/backend/convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import FlightGlobe from "@/components/globe";
-import FlightPreviewCard from "@/components/flight-preview-card";
+import FlightGlobe from "@/components/home/globe";
+import FlightPreviewCard from "@/components/home/flight-preview-card";
 import WelcomeCard from "@/components/home/welcome-card";
 
 export const Route = createFileRoute("/")({

@@ -206,9 +206,9 @@ export default function FlightPreviewCard({
         )}
       </CardContent>
 
-      <CardFooter className="justify-center">
+      <CardFooter className="justify-center border-none">
         <Link to="/flights/$flightId" params={{ flightId }} className="w-full">
-          <Button size="default" className="gap-2 w-full">
+          <Button size="default" className="gap-2 w-full cursor-pointer">
             Voir le vol
             <ArrowRight className="size-4" />
           </Button>
