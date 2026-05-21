@@ -97,16 +97,6 @@ function UserProfilePage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
-      {/* Back link */}
-      <div className="mb-6">
-        <Link to="/">
-          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2">
-            <ArrowLeft className="size-4" />
-            Carte
-          </Button>
-        </Link>
-      </div>
-
       {/* Hero */}
       <div className="mb-10 flex flex-col items-center gap-5 text-center">
         <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">

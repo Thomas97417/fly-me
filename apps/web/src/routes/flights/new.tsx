@@ -7,8 +7,14 @@ import {
 import { useMutation } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useForm } from "@tanstack/react-form";
+import { useState } from "react";
 import z from "zod";
 import { toast } from "sonner";
+import {
+  MediaPicker,
+  IMAGE_TYPES,
+  type MediaItem,
+} from "@/components/media-picker";
 import { Popover } from "@base-ui/react/popover";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -31,6 +37,7 @@ import {
   Globe,
   MapPin,
   Plus,
+  Images,
 } from "lucide-react";
 
 export const Route = createFileRoute("/flights/new")({
@@ -118,7 +125,11 @@ function Field({
   );
 }
 
-function FieldErrors({ errors }: { errors: Array<{ message?: string } | undefined> }) {
+function FieldErrors({
+  errors,
+}: {
+  errors: Array<{ message?: string } | undefined>;
+}) {
   if (errors.length === 0) return null;
   return (
     <>
@@ -133,7 +144,11 @@ function FieldErrors({ errors }: { errors: Array<{ message?: string } | undefine
 
 function NewFlightPage() {
   const createFlight = useMutation(api.flights.createFlight);
+  const generateUploadUrl = useMutation(api.r2.generateFlightMediaUploadUrl);
+  const syncMetadata = useMutation(api.r2.syncMetadata);
+  const addFlightMedia = useMutation(api.flightMedia.addFlightMedia);
   const navigate = useNavigate();
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
   const form = useForm({
     defaultValues: {
@@ -148,8 +163,9 @@ function NewFlightPage() {
       isPublic: true,
     },
     onSubmit: async ({ value }) => {
+      let flightId;
       try {
-        const flightId = await createFlight({
+        flightId = await createFlight({
           date: value.date,
           locationName: value.locationName.trim(),
           latitude: value.latitude,
@@ -160,11 +176,41 @@ function NewFlightPage() {
           maxAltitudeMeters: value.maxAltitudeMeters,
           isPublic: value.isPublic,
         });
-        toast.success("Vol enregistré !");
-        navigate({ to: "/flights/$flightId", params: { flightId } });
       } catch {
         toast.error("Échec de la création du vol.");
+        return;
       }
+
+      if (mediaItems.length > 0) {
+        const results = await Promise.allSettled(
+          mediaItems.map(async ({ file }) => {
+            const { key, url } = await generateUploadUrl({ flightId });
+            await fetch(url, {
+              method: "PUT",
+              headers: { "Content-Type": file.type },
+              body: file,
+            });
+            await syncMetadata({ key });
+            await addFlightMedia({
+              flightId,
+              r2Key: key,
+              mediaType: IMAGE_TYPES.includes(file.type) ? "image" : "video",
+              mimeType: file.type,
+            });
+          }),
+        );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) {
+          toast.error(
+            failed === 1
+              ? "1 média n'a pas pu être uploadé."
+              : `${failed} médias n'ont pas pu être uploadés.`,
+          );
+        }
+      }
+
+      toast.success("Vol enregistré !");
+      navigate({ to: "/flights/$flightId", params: { flightId } });
     },
     validators: {
       onSubmit: flightSchema,
@@ -172,17 +218,7 @@ function NewFlightPage() {
   });
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12">
-      {/* Back link */}
-      <div className="mb-6">
-        <Link to="/flights">
-          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2">
-            <ArrowLeft className="size-4" />
-            Mes vols
-          </Button>
-        </Link>
-      </div>
-
+    <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Header */}
       <div className="mb-10 flex flex-col gap-1.5">
         <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -260,9 +296,13 @@ function NewFlightPage() {
                         >
                           <CalendarIcon className="size-3.5 text-muted-foreground" />
                           {field.state.value
-                            ? format(parseISO(field.state.value), "d MMMM yyyy", {
-                                locale: fr,
-                              })
+                            ? format(
+                                parseISO(field.state.value),
+                                "d MMMM yyyy",
+                                {
+                                  locale: fr,
+                                },
+                              )
                             : "Sélectionner une date"}
                         </Button>
                       }
@@ -297,7 +337,11 @@ function NewFlightPage() {
             <form.Field
               name="droneModel"
               children={(field) => (
-                <Field htmlFor="droneModel" label="Modèle de drone" icon={Drone}>
+                <Field
+                  htmlFor="droneModel"
+                  label="Modèle de drone"
+                  icon={Drone}
+                >
                   <Input
                     id="droneModel"
                     placeholder="DJI Mini 4 Pro"
@@ -331,7 +375,11 @@ function NewFlightPage() {
             <form.Field
               name="maxAltitudeMeters"
               children={(field) => (
-                <Field htmlFor="altitude" label="Altitude max (m)" icon={Mountain}>
+                <Field
+                  htmlFor="altitude"
+                  label="Altitude max (m)"
+                  icon={Mountain}
+                >
                   <NumberInput
                     id="altitude"
                     min={0}
@@ -366,6 +414,14 @@ function NewFlightPage() {
           />
         </FormCard>
 
+        <FormCard icon={Images} label="Médias">
+          <MediaPicker
+            mode="deferred"
+            value={mediaItems}
+            onChange={setMediaItems}
+          />
+        </FormCard>
+
         <FormCard icon={Globe} label="Visibilité">
           <form.Field
             name="isPublic"
@@ -377,13 +433,18 @@ function NewFlightPage() {
                 <Checkbox
                   id="isPublic"
                   checked={field.state.value}
-                  onCheckedChange={(checked) => field.handleChange(checked === true)}
+                  onCheckedChange={(checked) =>
+                    field.handleChange(checked === true)
+                  }
                   className="mt-0.5"
                 />
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">Visible sur le globe</span>
+                  <span className="text-sm font-medium">
+                    Visible sur le globe
+                  </span>
                   <span className="text-xs text-muted-foreground">
-                    Les autres pilotes pourront voir ce vol sur la carte publique.
+                    Les autres pilotes pourront voir ce vol sur la carte
+                    publique.
                   </span>
                 </div>
               </label>

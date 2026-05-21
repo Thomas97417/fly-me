@@ -4,8 +4,7 @@ import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import MediaUpload from "@/components/media-upload";
-import MediaGallery from "@/components/media-gallery";
+import { MediaPicker } from "@/components/media-picker";
 import {
   MapPin,
   Calendar,
@@ -89,9 +88,7 @@ function FlightDetailPage() {
   const flight = useQuery(api.flights.getFlight, {
     flightId: flightId as Id<"flights">,
   });
-  const deleteFlight = useMutation(api.flights.deleteFlight);
   const user = useCurrentUser();
-  const navigate = useNavigate();
 
   if (flight === undefined) {
     return (
@@ -137,16 +134,6 @@ function FlightDetailPage() {
   }
 
   const isOwner = user?._id === flight.userId;
-
-  async function handleDelete() {
-    try {
-      await deleteFlight({ flightId: flight!._id });
-      toast.success("Vol supprimé.");
-      navigate({ to: "/flights" });
-    } catch {
-      toast.error("Échec de la suppression.");
-    }
-  }
 
   const stats: Array<{
     icon: React.ComponentType<{ className?: string }>;
@@ -291,8 +278,11 @@ function FlightDetailPage() {
       <div className="mb-10">
         <SectionCard icon={Images} label="Médias">
           <div className="flex flex-col gap-4">
-            <MediaGallery flightId={flight._id} isOwner={isOwner} />
-            {isOwner && <MediaUpload flightId={flight._id} />}
+            <MediaPicker
+              mode="immediate"
+              flightId={flight._id}
+              isOwner={isOwner}
+            />
           </div>
         </SectionCard>
       </div>

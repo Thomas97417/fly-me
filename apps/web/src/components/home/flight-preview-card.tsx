@@ -79,7 +79,7 @@ function MetaItem({
 }
 
 const cardStyles =
-  "w-80 max-w-sm rounded-2xl bg-background/70 backdrop-blur-md shadow-lg border-border/50";
+  "w-80 max-w-sm rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md shadow-lg ring-0 transition-all duration-200";
 
 export default function FlightPreviewCard({
   flightId,

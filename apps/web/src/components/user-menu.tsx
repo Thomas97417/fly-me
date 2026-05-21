@@ -33,8 +33,9 @@ export default function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        nativeButton={false}
         render={
-          <UserAvatar className="size-8 ring-2 ring-transparent transition-all hover:ring-primary/30 data-[popup-open]:ring-primary/40" />
+          <UserAvatar className="size-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary/30 data-[popup-open]:ring-primary/40" />
         }
       />
       <DropdownMenuContent
