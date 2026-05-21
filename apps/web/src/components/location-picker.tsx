@@ -1,21 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { MapPin, LocateFixed, Loader2 } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
 interface LocationPickerProps {
-  locationName: string;
   latitude?: number;
   longitude?: number;
-  onLocationChange: (location: {
-    locationName: string;
-    latitude?: number;
-    longitude?: number;
+  onCoordinatesChange: (coords: {
+    latitude: number;
+    longitude: number;
   }) => void;
 }
 
@@ -34,15 +29,13 @@ function createMarkerElement() {
 }
 
 export default function LocationPicker({
-  locationName,
   latitude,
   longitude,
-  onLocationChange,
+  onCoordinatesChange,
 }: LocationPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
-  const [isLocating, setIsLocating] = useState(false);
 
   function placeMarker(lng: number, lat: number, fly = false) {
     const map = mapRef.current;
@@ -78,15 +71,17 @@ export default function LocationPicker({
       new mapboxgl.AttributionControl({ compact: true }),
       "bottom-right",
     );
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(
+      new mapboxgl.NavigationControl({ showCompass: false }),
+      "top-right",
+    );
 
     map.on("click", (e) => {
       const { lng, lat } = e.lngLat;
       const roundedLat = Math.round(lat * 1000000) / 1000000;
       const roundedLng = Math.round(lng * 1000000) / 1000000;
       placeMarker(roundedLng, roundedLat);
-      onLocationChange({
-        locationName,
+      onCoordinatesChange({
         latitude: roundedLat,
         longitude: roundedLng,
       });
@@ -105,21 +100,6 @@ export default function LocationPicker({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function handleGeolocate() {
-    if (!navigator.geolocation) return;
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
-        const lng = Math.round(pos.coords.longitude * 1000000) / 1000000;
-        placeMarker(lng, lat, true);
-        onLocationChange({ locationName, latitude: lat, longitude: lng });
-        setIsLocating(false);
-      },
-      () => setIsLocating(false),
-    );
-  }
 
   const hasCoords = latitude != null && longitude != null;
 
@@ -154,56 +134,17 @@ export default function LocationPicker({
         }
       `}</style>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="locationName" className="text-xs font-medium">
-            Nom du lieu
-          </Label>
-          <Input
-            id="locationName"
-            placeholder="ex: Parc de la Tête d'Or, Lyon"
-            value={locationName}
-            onChange={(e) =>
-              onLocationChange({
-                locationName: e.target.value,
-                latitude,
-                longitude,
-              })
-            }
-          />
-        </div>
+      <div className="relative w-full overflow-hidden rounded-lg border">
+        <div ref={containerRef} className="w-full h-72" />
 
-        <div className="relative w-full overflow-hidden rounded-lg border">
-          <div ref={containerRef} className="w-full h-72" />
-
-          {/* Floating actions */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleGeolocate}
-              disabled={isLocating}
-              className="gap-1.5 bg-background/90 backdrop-blur-sm shadow"
-            >
-              {isLocating ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <LocateFixed className="size-3.5" />
-              )}
-              Ma position
-            </Button>
-          </div>
-
-          {/* Hint / coords pill */}
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none z-10">
-            <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-muted-foreground inline-flex items-center gap-1.5">
-              <MapPin className="size-3" />
-              {hasCoords
-                ? `${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}`
-                : "Cliquez pour placer un marqueur"}
-            </span>
-          </div>
+        {/* Hint / coords pill */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-muted-foreground inline-flex items-center gap-1.5">
+            <MapPin className="size-3" />
+            {hasCoords
+              ? `${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}`
+              : "Cliquez pour placer un marqueur"}
+          </span>
         </div>
       </div>
     </>

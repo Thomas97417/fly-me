@@ -6,7 +6,8 @@ import {
 } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
-import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import z from "zod";
 import { toast } from "sonner";
 import { Popover } from "@base-ui/react/popover";
 import { format, parseISO } from "date-fns";
@@ -48,6 +49,26 @@ export const Route = createFileRoute("/flights/new")({
     }
   },
   component: NewFlightPage,
+});
+
+const flightSchema = z.object({
+  date: z.string().min(1, "La date est requise."),
+  locationName: z.string().trim().min(1, "Le lieu est requis."),
+  latitude: z
+    .union([z.number(), z.undefined()])
+    .refine((v): v is number => v !== undefined, {
+      message: "Sélectionnez une localisation sur la carte.",
+    }),
+  longitude: z
+    .union([z.number(), z.undefined()])
+    .refine((v): v is number => v !== undefined, {
+      message: "Sélectionnez une localisation sur la carte.",
+    }),
+  description: z.string().trim().min(1, "La description est requise."),
+  droneModel: z.string(),
+  durationMinutes: z.union([z.number(), z.undefined()]),
+  maxAltitudeMeters: z.union([z.number(), z.undefined()]),
+  isPublic: z.boolean(),
 });
 
 function FormCard({
@@ -97,51 +118,58 @@ function Field({
   );
 }
 
+function FieldErrors({ errors }: { errors: Array<{ message?: string } | undefined> }) {
+  if (errors.length === 0) return null;
+  return (
+    <>
+      {errors.map((error, i) => (
+        <p key={i} className="text-xs text-destructive">
+          {error?.message}
+        </p>
+      ))}
+    </>
+  );
+}
+
 function NewFlightPage() {
   const createFlight = useMutation(api.flights.createFlight);
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [form, setForm] = useState({
-    date: new Date().toISOString().split("T")[0],
-    locationName: "",
-    latitude: undefined as number | undefined,
-    longitude: undefined as number | undefined,
-    description: "",
-    droneModel: "",
-    durationMinutes: undefined as number | undefined,
-    maxAltitudeMeters: undefined as number | undefined,
-    isPublic: true,
+  const form = useForm({
+    defaultValues: {
+      date: new Date().toISOString().split("T")[0],
+      locationName: "",
+      latitude: undefined as number | undefined,
+      longitude: undefined as number | undefined,
+      description: "",
+      droneModel: "",
+      durationMinutes: undefined as number | undefined,
+      maxAltitudeMeters: undefined as number | undefined,
+      isPublic: true,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const flightId = await createFlight({
+          date: value.date,
+          locationName: value.locationName.trim(),
+          latitude: value.latitude,
+          longitude: value.longitude,
+          description: value.description.trim(),
+          droneModel: value.droneModel?.trim() || undefined,
+          durationMinutes: value.durationMinutes,
+          maxAltitudeMeters: value.maxAltitudeMeters,
+          isPublic: value.isPublic,
+        });
+        toast.success("Vol enregistré !");
+        navigate({ to: "/flights/$flightId", params: { flightId } });
+      } catch {
+        toast.error("Échec de la création du vol.");
+      }
+    },
+    validators: {
+      onSubmit: flightSchema,
+    },
   });
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.locationName.trim()) {
-      toast.error("Le nom du lieu est requis.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const flightId = await createFlight({
-        date: form.date,
-        locationName: form.locationName.trim(),
-        latitude: form.latitude,
-        longitude: form.longitude,
-        description: form.description.trim() || undefined,
-        droneModel: form.droneModel.trim() || undefined,
-        durationMinutes: form.durationMinutes,
-        maxAltitudeMeters: form.maxAltitudeMeters,
-        isPublic: form.isPublic,
-      });
-      toast.success("Vol enregistré !");
-      navigate({ to: "/flights/$flightId", params: { flightId } });
-    } catch {
-      toast.error("Échec de la création du vol.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12">
@@ -167,147 +195,200 @@ function NewFlightPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+        className="flex flex-col gap-8"
+      >
         <FormCard icon={MapPin} label="Localisation">
-          <LocationPicker
-            locationName={form.locationName}
-            latitude={form.latitude}
-            longitude={form.longitude}
-            onLocationChange={(loc) =>
-              setForm((prev) => ({
-                ...prev,
-                locationName: loc.locationName,
-                latitude: loc.latitude,
-                longitude: loc.longitude,
-              }))
-            }
+          <form.Field
+            name="locationName"
+            children={(field) => (
+              <Field htmlFor="locationName" label="Nom du lieu" icon={MapPin}>
+                <Input
+                  id="locationName"
+                  placeholder="ex: Parc de la Tête d'Or, Lyon"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                <FieldErrors errors={field.state.meta.errors} />
+              </Field>
+            )}
           />
+
+          <form.Subscribe
+            selector={(state) => ({
+              latitude: state.values.latitude,
+              longitude: state.values.longitude,
+              latitudeErrors: state.fieldMeta.latitude?.errors ?? [],
+            })}
+          >
+            {(s) => (
+              <div className="flex flex-col gap-1.5">
+                <LocationPicker
+                  latitude={s.latitude}
+                  longitude={s.longitude}
+                  onCoordinatesChange={(coords) => {
+                    form.setFieldValue("latitude", coords.latitude);
+                    form.setFieldValue("longitude", coords.longitude);
+                  }}
+                />
+                <FieldErrors errors={s.latitudeErrors} />
+              </div>
+            )}
+          </form.Subscribe>
         </FormCard>
 
         <FormCard icon={Drone} label="Détails du vol">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field htmlFor="date" label="Date" icon={CalendarIcon}>
-              <Popover.Root>
-                <Popover.Trigger
-                  render={
-                    <Button
-                      id="date"
-                      type="button"
-                      variant="outline"
-                      className="w-full justify-start font-normal"
-                    >
-                      <CalendarIcon className="size-3.5 text-muted-foreground" />
-                      {form.date
-                        ? format(parseISO(form.date), "d MMMM yyyy", {
-                            locale: fr,
-                          })
-                        : "Sélectionner une date"}
-                    </Button>
-                  }
-                />
-                <Popover.Portal>
-                  <Popover.Positioner sideOffset={6} align="start">
-                    <Popover.Popup className="z-50 rounded-xl border border-border/50 bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95">
-                      <Calendar
-                        mode="single"
-                        selected={form.date ? parseISO(form.date) : undefined}
-                        onSelect={(date) => {
-                          if (date) {
-                            setForm((prev) => ({
-                              ...prev,
-                              date: format(date, "yyyy-MM-dd"),
-                            }));
-                          }
-                        }}
-                        locale={fr}
-                        captionLayout="dropdown"
-                      />
-                    </Popover.Popup>
-                  </Popover.Positioner>
-                </Popover.Portal>
-              </Popover.Root>
-            </Field>
-            <Field htmlFor="droneModel" label="Modèle de drone" icon={Drone}>
-              <Input
-                id="droneModel"
-                placeholder="DJI Mini 4 Pro"
-                value={form.droneModel}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    droneModel: e.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field htmlFor="duration" label="Durée (min)" icon={Clock}>
-              <NumberInput
-                id="duration"
-                min={0}
-                stepper={1}
-                placeholder="25 min"
-                suffix=" min"
-                value={form.durationMinutes}
-                onValueChange={(v) =>
-                  setForm((prev) => ({ ...prev, durationMinutes: v }))
-                }
-              />
-            </Field>
-            <Field htmlFor="altitude" label="Altitude max (m)" icon={Mountain}>
-              <NumberInput
-                id="altitude"
-                min={0}
-                stepper={5}
-                placeholder="120 m"
-                suffix=" m"
-                value={form.maxAltitudeMeters}
-                onValueChange={(v) =>
-                  setForm((prev) => ({ ...prev, maxAltitudeMeters: v }))
-                }
-              />
-            </Field>
+            <form.Field
+              name="date"
+              children={(field) => (
+                <Field htmlFor="date" label="Date" icon={CalendarIcon}>
+                  <Popover.Root>
+                    <Popover.Trigger
+                      render={
+                        <Button
+                          id="date"
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-start font-normal"
+                        >
+                          <CalendarIcon className="size-3.5 text-muted-foreground" />
+                          {field.state.value
+                            ? format(parseISO(field.state.value), "d MMMM yyyy", {
+                                locale: fr,
+                              })
+                            : "Sélectionner une date"}
+                        </Button>
+                      }
+                    />
+                    <Popover.Portal>
+                      <Popover.Positioner sideOffset={6} align="start">
+                        <Popover.Popup className="z-50 rounded-xl border border-border/50 bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.state.value
+                                ? parseISO(field.state.value)
+                                : undefined
+                            }
+                            onSelect={(date) => {
+                              if (date) {
+                                field.handleChange(format(date, "yyyy-MM-dd"));
+                              }
+                            }}
+                            locale={fr}
+                            captionLayout="dropdown"
+                          />
+                        </Popover.Popup>
+                      </Popover.Positioner>
+                    </Popover.Portal>
+                  </Popover.Root>
+                  <FieldErrors errors={field.state.meta.errors} />
+                </Field>
+              )}
+            />
+
+            <form.Field
+              name="droneModel"
+              children={(field) => (
+                <Field htmlFor="droneModel" label="Modèle de drone" icon={Drone}>
+                  <Input
+                    id="droneModel"
+                    placeholder="DJI Mini 4 Pro"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                  />
+                  <FieldErrors errors={field.state.meta.errors} />
+                </Field>
+              )}
+            />
+
+            <form.Field
+              name="durationMinutes"
+              children={(field) => (
+                <Field htmlFor="duration" label="Durée (min)" icon={Clock}>
+                  <NumberInput
+                    id="duration"
+                    min={0}
+                    stepper={1}
+                    placeholder="25 min"
+                    suffix=" min"
+                    value={field.state.value}
+                    onValueChange={(v) => field.handleChange(v)}
+                  />
+                  <FieldErrors errors={field.state.meta.errors} />
+                </Field>
+              )}
+            />
+
+            <form.Field
+              name="maxAltitudeMeters"
+              children={(field) => (
+                <Field htmlFor="altitude" label="Altitude max (m)" icon={Mountain}>
+                  <NumberInput
+                    id="altitude"
+                    min={0}
+                    stepper={5}
+                    placeholder="120 m"
+                    suffix=" m"
+                    value={field.state.value}
+                    onValueChange={(v) => field.handleChange(v)}
+                  />
+                  <FieldErrors errors={field.state.meta.errors} />
+                </Field>
+              )}
+            />
           </div>
 
-          <Field htmlFor="description" label="Description" icon={FileText}>
-            <textarea
-              id="description"
-              placeholder="Notes sur le vol, conditions météo..."
-              rows={4}
-              className="flex w-full rounded-lg border border-input bg-transparent dark:bg-input/30 px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:border-ring resize-none"
-              value={form.description}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-            />
-          </Field>
+          <form.Field
+            name="description"
+            children={(field) => (
+              <Field htmlFor="description" label="Description" icon={FileText}>
+                <textarea
+                  id="description"
+                  placeholder="Notes sur le vol, conditions météo..."
+                  rows={4}
+                  className="flex w-full rounded-lg border border-input bg-transparent dark:bg-input/30 px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:border-ring resize-none"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                <FieldErrors errors={field.state.meta.errors} />
+              </Field>
+            )}
+          />
         </FormCard>
 
         <FormCard icon={Globe} label="Visibilité">
-          <label
-            htmlFor="isPublic"
-            className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/20 p-4 cursor-pointer transition-colors hover:bg-muted/40"
-          >
-            <Checkbox
-              id="isPublic"
-              checked={form.isPublic}
-              onCheckedChange={(checked) =>
-                setForm((prev) => ({
-                  ...prev,
-                  isPublic: checked === true,
-                }))
-              }
-              className="mt-0.5"
-            />
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Visible sur le globe</span>
-              <span className="text-xs text-muted-foreground">
-                Les autres pilotes pourront voir ce vol sur la carte publique.
-              </span>
-            </div>
-          </label>
+          <form.Field
+            name="isPublic"
+            children={(field) => (
+              <label
+                htmlFor="isPublic"
+                className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/20 p-4 cursor-pointer transition-colors hover:bg-muted/40"
+              >
+                <Checkbox
+                  id="isPublic"
+                  checked={field.state.value}
+                  onCheckedChange={(checked) => field.handleChange(checked === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">Visible sur le globe</span>
+                  <span className="text-xs text-muted-foreground">
+                    Les autres pilotes pourront voir ce vol sur la carte publique.
+                  </span>
+                </div>
+              </label>
+            )}
+          />
         </FormCard>
 
         {/* Submit */}
@@ -317,14 +398,22 @@ function NewFlightPage() {
               Annuler
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting} className="gap-1.5">
-            {isSubmitting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Save className="size-4" />
+          <form.Subscribe>
+            {(state) => (
+              <Button
+                type="submit"
+                disabled={state.isSubmitting}
+                className="gap-1.5"
+              >
+                {state.isSubmitting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                {state.isSubmitting ? "Enregistrement..." : "Enregistrer"}
+              </Button>
             )}
-            {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-          </Button>
+          </form.Subscribe>
         </div>
       </form>
     </div>

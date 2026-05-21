@@ -9,7 +9,7 @@ import { ArrowLeft, User, Drone, MapPin, Clock } from "lucide-react";
 export const Route = createFileRoute("/users/$userId")({
   head: () => ({
     meta: [
-      { title: "Profil pilote — FlyMe" },
+      { title: "Profil — FlyMe" },
       {
         name: "description",
         content: "Profil public et vols partagés du pilote.",
