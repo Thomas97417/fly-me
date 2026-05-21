@@ -99,10 +99,6 @@ function UserProfilePage() {
     <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Hero */}
       <div className="mb-10 flex flex-col items-center gap-5 text-center">
-        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-          <User className="size-3.5" />
-          Profil pilote
-        </div>
         <div className="size-24 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg">
           {user.image ? (
             <img

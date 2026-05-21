@@ -1,11 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
-import { Dialog } from "@base-ui/react/dialog";
 import { toast } from "sonner";
 import {
-  ChevronLeft,
-  ChevronRight,
   Drone,
   Loader2,
   Maximize2,
@@ -30,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { MediaLightbox } from "@/components/media-lightbox";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -139,11 +137,6 @@ export function MediaPicker(props: Props) {
             isImage: m.mediaType === "image",
           }));
 
-  const expandedIndex = expandedKey
-    ? items.findIndex((i) => i.key === expandedKey)
-    : -1;
-  const expanded = expandedIndex >= 0 ? items[expandedIndex] : null;
-
   const canAdd =
     props.mode === "deferred" ||
     (props.mode === "immediate" && props.isOwner);
@@ -237,18 +230,6 @@ export function MediaPicker(props: Props) {
       toast.success("Média supprimé.");
     } catch {
       toast.error("Échec de la suppression.");
-    }
-  }
-
-  function handlePopupKeyDown(e: React.KeyboardEvent) {
-    if (!expanded || items.length === 0) return;
-    if (e.key === "ArrowLeft" && expandedIndex > 0) {
-      e.preventDefault();
-      setExpandedKey(items[expandedIndex - 1].key);
-    }
-    if (e.key === "ArrowRight" && expandedIndex < items.length - 1) {
-      e.preventDefault();
-      setExpandedKey(items[expandedIndex + 1].key);
     }
   }
 
@@ -418,148 +399,65 @@ export function MediaPicker(props: Props) {
         )}
       </div>
 
-      {/* Lightbox */}
-      <Dialog.Root
-        open={!!expanded}
-        onOpenChange={(open) => !open && setExpandedKey(null)}
-      >
-        <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 duration-150" />
-          <Dialog.Popup
-            tabIndex={-1}
-            onKeyDown={handlePopupKeyDown}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setExpandedKey(null);
-            }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 duration-200"
-          >
-            {expanded && (
-              <>
-                <Dialog.Close
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon-md"
-                      className="absolute top-4 right-4 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
-                      aria-label="Fermer"
-                    />
-                  }
-                >
-                  <X className="size-4" />
-                </Dialog.Close>
-
-                {items.length > 1 && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
-                    {expandedIndex + 1} / {items.length}
-                  </div>
-                )}
-
-                {items.length > 1 && expandedIndex > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="icon-md"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
-                    onClick={() =>
-                      setExpandedKey(items[expandedIndex - 1].key)
-                    }
-                    aria-label="Précédent"
-                  >
-                    <ChevronLeft className="size-5" />
-                  </Button>
-                )}
-
-                {items.length > 1 && expandedIndex < items.length - 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon-md"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
-                    onClick={() =>
-                      setExpandedKey(items[expandedIndex + 1].key)
-                    }
-                    aria-label="Suivant"
-                  >
-                    <ChevronRight className="size-5" />
-                  </Button>
-                )}
-
-                <div className="flex max-h-[85vh] max-w-[90vw] flex-col gap-3">
-                  {expanded.isImage ? (
-                    <img
-                      src={expanded.url}
-                      alt=""
-                      className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
-                    />
-                  ) : (
-                    <video
-                      src={expanded.url}
-                      controls
-                      autoPlay
-                      playsInline
-                      className="max-h-[85vh] max-w-full rounded-2xl shadow-2xl"
-                    />
-                  )}
-                </div>
-
-                {/* Delete in lightbox */}
-                {props.mode === "deferred" && (
+      <MediaLightbox
+        items={items}
+        activeKey={expandedKey}
+        onClose={() => setExpandedKey(null)}
+        onNavigate={setExpandedKey}
+        renderAction={(item) =>
+          props.mode === "deferred" ? (
+            <Button
+              size="sm"
+              className="absolute bottom-4 right-4 gap-1.5 border border-white/15 bg-destructive/90 text-white shadow-lg backdrop-blur-md hover:bg-destructive"
+              onClick={() => {
+                removeLocalByKey(item.key);
+                setExpandedKey(null);
+              }}
+            >
+              <Trash2 className="size-3.5" />
+              Retirer
+            </Button>
+          ) : canDeleteRemote ? (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
                   <Button
                     size="sm"
                     className="absolute bottom-4 right-4 gap-1.5 border border-white/15 bg-destructive/90 text-white shadow-lg backdrop-blur-md hover:bg-destructive"
+                  />
+                }
+              >
+                <Trash2 className="size-3.5" />
+                Supprimer
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogMedia>
+                    <TriangleAlert className="size-5" />
+                  </AlertDialogMedia>
+                  <AlertDialogTitle>Supprimer ce média ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est définitive. Le média sera supprimé
+                    immédiatement.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
                     onClick={() => {
-                      removeLocalByKey(expanded.key);
+                      deleteRemoteByKey(item.key);
                       setExpandedKey(null);
                     }}
                   >
-                    <Trash2 className="size-3.5" />
-                    Retirer
-                  </Button>
-                )}
-                {canDeleteRemote && (
-                  <AlertDialog>
-                    <AlertDialogTrigger
-                      render={
-                        <Button
-                          size="sm"
-                          className="absolute bottom-4 right-4 gap-1.5 border border-white/15 bg-destructive/90 text-white shadow-lg backdrop-blur-md hover:bg-destructive"
-                        />
-                      }
-                    >
-                      <Trash2 className="size-3.5" />
-                      Supprimer
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogMedia>
-                          <TriangleAlert className="size-5" />
-                        </AlertDialogMedia>
-                        <AlertDialogTitle>
-                          Supprimer ce média ?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est définitive. Le média sera supprimé
-                          immédiatement.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          variant="destructive"
-                          onClick={() => {
-                            deleteRemoteByKey(expanded.key);
-                            setExpandedKey(null);
-                          }}
-                        >
-                          Supprimer
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </>
-            )}
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null
+        }
+      />
     </>
   );
 }

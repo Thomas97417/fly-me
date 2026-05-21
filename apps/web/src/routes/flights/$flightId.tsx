@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "convex/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
   FileText,
   Images,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
 import OwnerAvatar from "@/components/ui/owner-avatar";
@@ -177,24 +176,9 @@ function FlightDetailPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12">
-      {/* Back link */}
-      <div className="mb-6">
-        <Link to="/flights">
-          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2">
-            <ArrowLeft className="size-4" />
-            Mes vols
-          </Button>
-        </Link>
-      </div>
-
+    <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Hero */}
       <div className="mb-10 flex flex-col items-center gap-4 text-center">
-        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-          <Drone className="size-3.5" />
-          Sortie drone
-        </div>
-
         {isOwner ? (
           <Link to="/flights" className="group">
             <OwnerAvatar

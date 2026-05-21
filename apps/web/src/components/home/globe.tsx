@@ -3,6 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+import { useTheme } from "@/components/theme-provider";
+
 interface FlightPoint {
   _id: string;
   locationName: string;
@@ -18,13 +20,38 @@ interface GlobeProps {
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
+const LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
+const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
+
+const LIGHT_FOG = {
+  color: "rgba(255, 255, 255, 0.9)",
+  "high-color": "rgb(210, 230, 250)",
+  "horizon-blend": 0.03,
+  "space-color": "rgb(255, 255, 255)",
+  "star-intensity": 0,
+};
+
+const DARK_FOG = {
+  color: "rgba(20, 25, 40, 0.9)",
+  "high-color": "rgb(36, 50, 80)",
+  "horizon-blend": 0.04,
+  "space-color": "rgb(8, 10, 20)",
+  "star-intensity": 0.6,
+};
+
 export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const spinRef = useRef<number | null>(null);
   const userInteractingRef = useRef(false);
+  const currentStyleRef = useRef<string | null>(null);
+  const themeRef = useRef<string | undefined>(undefined);
   const navigate = useNavigate();
+  const { resolvedTheme } = useTheme();
+
+  // Keep latest theme accessible from inside the map's style.load listener
+  themeRef.current = resolvedTheme;
 
   const navigateToFlight = useCallback(
     (flightId: string) => {
@@ -40,9 +67,13 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const initialStyle =
+      themeRef.current === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    currentStyleRef.current = initialStyle;
+
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: initialStyle,
       projection: "globe",
       center: [2.35, 46.85],
       zoom: 2.2,
@@ -64,14 +95,10 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
       "bottom-right",
     );
 
+    // Re-apply fog after every style load (initial + style swaps)
     map.on("style.load", () => {
-      map.setFog({
-        color: "rgba(255, 255, 255, 0.9)",
-        "high-color": "rgb(210, 230, 250)",
-        "horizon-blend": 0.03,
-        "space-color": "rgb(255, 255, 255)",
-        "star-intensity": 0,
-      } as any);
+      const isDark = themeRef.current === "dark";
+      map.setFog((isDark ? DARK_FOG : LIGHT_FOG) as any);
     });
 
     // Auto-rotation
@@ -110,6 +137,16 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
     };
   }, []);
 
+  // Switch style when theme changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !resolvedTheme) return;
+    const target = resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    if (currentStyleRef.current === target) return;
+    currentStyleRef.current = target;
+    map.setStyle(target);
+  }, [resolvedTheme]);
+
   // Sync markers with flights
   useEffect(() => {
     const map = mapRef.current;
@@ -141,9 +178,9 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
           className: "flyme-popup",
           maxWidth: "220px",
         }).setHTML(
-          `<div style="font-family:Inter,system-ui,sans-serif;">
-            <div style="font-weight:600;font-size:14px;color:#1a1a1a;">${flight.locationName}</div>
-            <div style="font-size:12px;color:#888;margin-top:2px;">${new Date(flight.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+          `<div class="flyme-popup-body">
+            <div class="flyme-popup-title">${flight.locationName}</div>
+            <div class="flyme-popup-date">${new Date(flight.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
           </div>`,
         );
 
@@ -218,14 +255,30 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
           filter: drop-shadow(0 2px 2px rgba(37, 99, 235, 0.2));
         }
         .flyme-popup .mapboxgl-popup-content {
+          background: var(--popover);
+          color: var(--popover-foreground);
           border-radius: 12px;
           padding: 10px 14px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
-          border: 1px solid rgba(0, 0, 0, 0.05);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.08);
+          border: 1px solid var(--border);
         }
-        .flyme-popup .mapboxgl-popup-tip {
-          border-top-color: white;
+        .flyme-popup-body {
+          font-family: Inter, system-ui, sans-serif;
         }
+        .flyme-popup-title {
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--foreground);
+        }
+        .flyme-popup-date {
+          font-size: 12px;
+          color: var(--muted-foreground);
+          margin-top: 2px;
+        }
+        .flyme-popup .mapboxgl-popup-anchor-top .mapboxgl-popup-tip { border-bottom-color: var(--popover); }
+        .flyme-popup .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip { border-top-color: var(--popover); }
+        .flyme-popup .mapboxgl-popup-anchor-left .mapboxgl-popup-tip { border-right-color: var(--popover); }
+        .flyme-popup .mapboxgl-popup-anchor-right .mapboxgl-popup-tip { border-left-color: var(--popover); }
         .mapboxgl-ctrl-attrib {
           opacity: 0.4;
           font-size: 10px !important;

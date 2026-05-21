@@ -3,7 +3,12 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPin } from "lucide-react";
 
+import { useTheme } from "@/components/theme-provider";
+
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
+
+const LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
+const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
 
 interface LocationPickerProps {
   latitude?: number;
@@ -36,6 +41,8 @@ export default function LocationPicker({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const currentStyleRef = useRef<string | null>(null);
+  const { resolvedTheme } = useTheme();
 
   function placeMarker(lng: number, lat: number, fly = false) {
     const map = mapRef.current;
@@ -59,9 +66,12 @@ export default function LocationPicker({
     if (!containerRef.current || mapRef.current) return;
 
     const hasInitial = latitude != null && longitude != null;
+    const initialStyle =
+      resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    currentStyleRef.current = initialStyle;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: initialStyle,
       center: hasInitial ? [longitude!, latitude!] : [2.35, 46.85],
       zoom: hasInitial ? 12 : 4,
       attributionControl: false,
@@ -100,6 +110,16 @@ export default function LocationPicker({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Switch style when theme changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !resolvedTheme) return;
+    const target = resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    if (currentStyleRef.current === target) return;
+    currentStyleRef.current = target;
+    map.setStyle(target);
+  }, [resolvedTheme]);
 
   const hasCoords = latitude != null && longitude != null;
 
