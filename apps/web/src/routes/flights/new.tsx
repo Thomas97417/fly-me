@@ -256,27 +256,25 @@ function NewFlightPage() {
             )}
           />
 
-          <form.Subscribe
-            selector={(state) => ({
-              latitude: state.values.latitude,
-              longitude: state.values.longitude,
-              latitudeErrors: state.fieldMeta.latitude?.errors ?? [],
-            })}
-          >
-            {(s) => (
-              <div className="flex flex-col gap-1.5">
-                <LocationPicker
-                  latitude={s.latitude}
-                  longitude={s.longitude}
-                  onCoordinatesChange={(coords) => {
-                    form.setFieldValue("latitude", coords.latitude);
-                    form.setFieldValue("longitude", coords.longitude);
-                  }}
-                />
-                <FieldErrors errors={s.latitudeErrors} />
-              </div>
+          <form.Field name="latitude">
+            {(latField) => (
+              <form.Field name="longitude">
+                {(lngField) => (
+                  <div className="flex flex-col gap-1.5">
+                    <LocationPicker
+                      latitude={latField.state.value}
+                      longitude={lngField.state.value}
+                      onCoordinatesChange={(coords) => {
+                        latField.handleChange(coords.latitude);
+                        lngField.handleChange(coords.longitude);
+                      }}
+                    />
+                    <FieldErrors errors={latField.state.meta.errors} />
+                  </div>
+                )}
+              </form.Field>
             )}
-          </form.Subscribe>
+          </form.Field>
         </FormCard>
 
         <FormCard icon={Drone} label="Détails du vol">

@@ -24,10 +24,10 @@ const LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
 const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
 
 const LIGHT_FOG = {
-  color: "rgba(255, 255, 255, 0.9)",
-  "high-color": "rgb(210, 230, 250)",
-  "horizon-blend": 0.03,
-  "space-color": "rgb(255, 255, 255)",
+  color: "rgba(225, 238, 255, 0.95)",
+  "high-color": "rgb(155, 195, 240)",
+  "horizon-blend": 0.06,
+  "space-color": "rgb(232, 240, 252)",
   "star-intensity": 0,
 };
 
@@ -67,8 +67,7 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const initialStyle =
-      themeRef.current === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    const initialStyle = themeRef.current === "dark" ? DARK_STYLE : LIGHT_STYLE;
     currentStyleRef.current = initialStyle;
 
     const map = new mapboxgl.Map({
@@ -163,8 +162,16 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
         el.className = "flyme-marker";
         el.innerHTML = `
           <div class="flyme-marker-pin">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.4-.1.9.3 1.1L11 12l-2 3H6l-1 1 3 2 2 3 1-1v-3l3-2 3.6 7.4c.2.4.7.5 1.1.3l.5-.3c.4-.2.6-.6.5-1.1z"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 10 7 7"/>
+              <path d="m10 14-3 3"/>
+              <path d="m14 10 3-3"/>
+              <path d="m14 14 3 3"/>
+              <path d="M14.205 4.139a4 4 0 1 1 5.439 5.863"/>
+              <path d="M19.637 14a4 4 0 1 1-5.432 5.863"/>
+              <path d="M4.367 10a4 4 0 1 1 5.438-5.863"/>
+              <path d="M9.795 19.862a4 4 0 1 1-5.429-5.873"/>
+              <rect width="4" height="4" x="10" y="10" rx="1"/>
             </svg>
           </div>
           <div class="flyme-marker-tail"></div>
@@ -230,29 +237,68 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
           cursor: pointer;
         }
         .flyme-marker-pin {
-          width: 38px;
-          height: 38px;
+          position: relative;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
-          border: 2.5px solid white;
+          background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+          border: 2px solid white;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35), 0 1px 4px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+          box-shadow:
+            0 4px 14px rgba(37, 99, 235, 0.45),
+            0 2px 4px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          transition:
+            transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+            box-shadow 0.25s ease;
+          z-index: 2;
+          will-change: transform;
+        }
+        .flyme-marker-pin::before {
+          content: "";
+          position: absolute;
+          inset: -2px;
+          border-radius: 50%;
+          background: rgba(59, 130, 246, 0.4);
+          z-index: -1;
+          pointer-events: none;
+          animation: flyme-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes flyme-pulse {
+          0% {
+            transform: scale(1);
+            opacity: 0;
+          }
+          15% {
+            opacity: 0.55;
+          }
+          100% {
+            transform: scale(2.4);
+            opacity: 0;
+          }
         }
         .flyme-marker:hover .flyme-marker-pin {
-          transform: scale(1.18);
-          box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45), 0 2px 8px rgba(0, 0, 0, 0.12);
+          transform: scale(1.2);
+          box-shadow:
+            0 8px 26px rgba(37, 99, 235, 0.6),
+            0 4px 10px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+        .flyme-marker:hover .flyme-marker-pin::before {
+          animation-play-state: paused;
+          opacity: 0;
         }
         .flyme-marker-tail {
           width: 0;
           height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 8px solid #2563eb;
-          margin-top: -2px;
-          filter: drop-shadow(0 2px 2px rgba(37, 99, 235, 0.2));
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 7px solid #2563eb;
+          margin-top: -3px;
+          filter: drop-shadow(0 2px 3px rgba(37, 99, 235, 0.35));
+          z-index: 1;
         }
         .flyme-popup .mapboxgl-popup-content {
           background: var(--popover);

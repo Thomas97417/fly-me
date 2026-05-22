@@ -1,5 +1,12 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { forwardRef, useCallback, useEffect, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { NumericFormat, type NumericFormatProps } from "react-number-format";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -41,6 +48,9 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     },
     ref,
   ) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
     const [value, setValue] = useState<number | undefined>(
       controlledValue ?? defaultValue,
     );
@@ -63,10 +73,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (
-          document.activeElement ===
-          (ref as React.RefObject<HTMLInputElement>).current
-        ) {
+        if (document.activeElement === inputRef.current) {
           if (e.key === "ArrowUp") {
             handleIncrement();
           } else if (e.key === "ArrowDown") {
@@ -80,7 +87,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       return () => {
         window.removeEventListener("keydown", handleKeyDown);
       };
-    }, [handleIncrement, handleDecrement, ref]);
+    }, [handleIncrement, handleDecrement]);
 
     useEffect(() => {
       if (controlledValue !== undefined) {
@@ -101,15 +108,13 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     };
 
     const handleBlur = () => {
-      if (value !== undefined) {
+      if (value !== undefined && inputRef.current) {
         if (value < min) {
           setValue(min);
-          (ref as React.RefObject<HTMLInputElement>).current!.value =
-            String(min);
+          inputRef.current.value = String(min);
         } else if (value > max) {
           setValue(max);
-          (ref as React.RefObject<HTMLInputElement>).current!.value =
-            String(max);
+          inputRef.current.value = String(max);
         }
       }
     };
@@ -132,7 +137,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           customInput={Input}
           placeholder={placeholder}
           className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative"
-          getInputRef={ref}
+          getInputRef={inputRef}
           {...props}
         />
 
