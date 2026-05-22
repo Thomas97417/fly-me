@@ -40,7 +40,7 @@ function PreviewStrip({
 
   if (valid.length === 0) {
     return (
-      <div className="-mt-5 relative flex aspect-[16/9] items-center justify-center overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-muted/40">
+      <div className="-mt-5 relative flex aspect-video items-center justify-center overflow-hidden bg-linear-to-br from-muted via-muted/70 to-muted/40">
         <Drone className="size-10 text-muted-foreground/30 transition-transform duration-300 group-hover:scale-110" />
       </div>
     );
@@ -48,7 +48,7 @@ function PreviewStrip({
 
   return (
     <div
-      className="-mt-5 grid aspect-[16/9] gap-px bg-border/50"
+      className="-mt-5 grid aspect-video gap-px bg-border/50"
       style={{ gridTemplateColumns: `repeat(${valid.length}, minmax(0, 1fr))` }}
     >
       {valid.map((p) => (

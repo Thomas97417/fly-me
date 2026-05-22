@@ -94,8 +94,7 @@ export default function LocationPicker({
     if (!containerRef.current || mapRef.current) return;
 
     const hasInitial = latitude != null && longitude != null;
-    const initialStyle =
-      resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    const initialStyle = resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
     currentStyleRef.current = initialStyle;
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -103,6 +102,7 @@ export default function LocationPicker({
       center: hasInitial ? [longitude!, latitude!] : [2.35, 46.85],
       zoom: hasInitial ? 12 : 4,
       attributionControl: false,
+      language: "fr",
     });
 
     map.addControl(

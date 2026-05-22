@@ -1,11 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Authenticated, useMutation, useQuery } from "convex/react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Authenticated, useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicFlightCard from "@/components/public-flight-card";
+import FollowButton from "@/components/follow-button";
 import {
   ArrowLeft,
   User,
@@ -14,8 +13,6 @@ import {
   Clock,
   Users,
   UserPlus,
-  UserCheck,
-  UserMinus,
 } from "lucide-react";
 
 export const Route = createFileRoute("/users/$userId")({
@@ -50,67 +47,6 @@ function StatBlock({
         {label}
       </span>
     </div>
-  );
-}
-
-function FollowButton({ userId }: { userId: string }) {
-  const state = useQuery(api.subscriptions.getSubscriptionState, { userId });
-  const subscribe = useMutation(api.subscriptions.subscribe);
-  const unsubscribe = useMutation(api.subscriptions.unsubscribe);
-  const [pending, setPending] = useState(false);
-  const [hovered, setHovered] = useState(false);
-
-  if (!state || state.isSelf) return null;
-
-  const handleClick = async () => {
-    setPending(true);
-    try {
-      if (state.isSubscribed) {
-        await unsubscribe({ userId });
-        toast.success("Désabonné");
-      } else {
-        await subscribe({ userId });
-        toast.success("Abonné");
-      }
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Une erreur est survenue",
-      );
-    } finally {
-      setPending(false);
-    }
-  };
-
-  if (state.isSubscribed) {
-    return (
-      <Button
-        variant="outline"
-        disabled={pending}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onClick={handleClick}
-        className="gap-1.5"
-      >
-        {hovered ? (
-          <>
-            <UserMinus className="size-4" />
-            Ne plus suivre
-          </>
-        ) : (
-          <>
-            <UserCheck className="size-4" />
-            Abonné
-          </>
-        )}
-      </Button>
-    );
-  }
-
-  return (
-    <Button disabled={pending} onClick={handleClick} className="gap-1.5">
-      <UserPlus className="size-4" />
-      Suivre
-    </Button>
   );
 }
 
@@ -193,44 +129,47 @@ function UserProfilePage() {
       </div>
 
       {/* Stats — always visible */}
-      <div className="mb-10 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm">
-        <StatBlock
-          label="Abonnés"
-          value={String(stats?.followersCount ?? 0)}
-          icon={Users}
-        />
-        <div className="hidden h-8 w-px bg-border sm:block" />
-        <StatBlock
-          label="Abonnements"
-          value={String(stats?.followingCount ?? 0)}
-          icon={UserPlus}
-        />
-        {flights.length > 0 && (
-          <>
-            <div className="hidden h-8 w-px bg-border sm:block" />
-            <StatBlock
-              label="Vols"
-              value={String(flights.length)}
-              icon={Drone}
-            />
-            <div className="hidden h-8 w-px bg-border sm:block" />
-            <StatBlock
-              label="Lieux"
-              value={String(uniqueLocations)}
-              icon={MapPin}
-            />
-            {totalDuration > 0 && (
-              <>
-                <div className="hidden h-8 w-px bg-border sm:block" />
-                <StatBlock
-                  label="Minutes"
-                  value={String(Math.round(totalDuration))}
-                  icon={Clock}
-                />
-              </>
-            )}
-          </>
-        )}
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          {flights.length > 0 && (
+            <>
+              <StatBlock
+                label="Vols"
+                value={String(flights.length)}
+                icon={Drone}
+              />
+              <div className="hidden h-8 w-px bg-border sm:block" />
+              <StatBlock
+                label="Lieux"
+                value={String(uniqueLocations)}
+                icon={MapPin}
+              />
+              {totalDuration > 0 && (
+                <>
+                  <div className="hidden h-8 w-px bg-border sm:block" />
+                  <StatBlock
+                    label="Minutes"
+                    value={String(Math.round(totalDuration))}
+                    icon={Clock}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <StatBlock
+            label="Abonnés"
+            value={String(stats?.followersCount ?? 0)}
+            icon={Users}
+          />
+          <div className="hidden h-8 w-px bg-border sm:block" />
+          <StatBlock
+            label="Abonnements"
+            value={String(stats?.followingCount ?? 0)}
+            icon={UserPlus}
+          />
+        </div>
       </div>
 
       {flights.length === 0 ? (

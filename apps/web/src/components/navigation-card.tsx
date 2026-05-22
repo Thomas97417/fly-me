@@ -54,9 +54,6 @@ export default function NavigationCard() {
                 <Link to="/subscriptions" className={linkStyles}>
                   Abonnements
                 </Link>
-                <Link to="/settings" className={linkStyles}>
-                  Settings
-                </Link>
               </Authenticated>
             </nav>
 

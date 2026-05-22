@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { LogOut, Settings, Drone, UserRound, User } from "lucide-react";
+import { LogOut, Settings, Drone, UserRound, User, Users } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -35,7 +35,7 @@ export default function UserMenu() {
       <DropdownMenuTrigger
         nativeButton={false}
         render={
-          <UserAvatar className="size-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary/30 data-[popup-open]:ring-primary/40" />
+          <UserAvatar className="size-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary/30 data-popup-open:ring-primary/40" />
         }
       />
       <DropdownMenuContent
@@ -90,10 +90,18 @@ export default function UserMenu() {
 
         <DropdownMenuItem
           className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
+          onClick={() => navigate({ to: "/subscriptions" })}
+        >
+          <Users className="mr-2 size-4 text-muted-foreground" />
+          Abonnements
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
           onClick={() => navigate({ to: "/settings" })}
         >
           <Settings className="mr-2 size-4 text-muted-foreground" />
-          Settings
+          Paramètres
         </DropdownMenuItem>
 
         <DropdownMenuSeparator className="my-1" />

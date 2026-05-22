@@ -71,8 +71,7 @@ export default function LocationViewer({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const initialStyle =
-      resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    const initialStyle = resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
     currentStyleRef.current = initialStyle;
 
     const map = new mapboxgl.Map({
@@ -81,6 +80,7 @@ export default function LocationViewer({
       center: [longitude, latitude],
       zoom: 12,
       attributionControl: false,
+      language: "fr",
     });
 
     map.addControl(

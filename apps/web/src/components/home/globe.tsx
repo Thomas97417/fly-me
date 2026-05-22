@@ -87,6 +87,7 @@ export default function FlightGlobe({ flights, onFlightClick }: GlobeProps) {
       touchZoomRotate: true,
       keyboard: false,
       attributionControl: false,
+      language: "fr",
     });
 
     map.addControl(

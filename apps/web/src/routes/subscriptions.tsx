@@ -188,9 +188,14 @@ function SubscriptionsPage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
-      <div className="mb-10">
+      {/* Header */}
+      <div className="mb-10 flex flex-col gap-1.5">
+        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <Users className="size-3.5" />
+          Communauté
+        </div>
         <h1 className="text-3xl font-bold tracking-tight">Mes abonnements</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Suis les pilotes qui t'inspirent et garde un œil sur leurs derniers vols.
         </p>
       </div>
