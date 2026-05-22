@@ -12,11 +12,13 @@ import {
   Clock,
   Drone,
   Mountain,
-  MapPin,
+  Globe,
+  Lock,
   ArrowRight,
+  MapPin,
 } from "lucide-react";
 
-interface PublicFlightCardProps {
+interface FlightCardProps {
   flight: {
     _id: string;
     date: string;
@@ -25,8 +27,7 @@ interface PublicFlightCardProps {
     droneModel?: string;
     durationMinutes?: number;
     maxAltitudeMeters?: number;
-    latitude?: number;
-    longitude?: number;
+    isPublic: boolean;
     previews?: Array<{ _id: string; url: string | null }>;
   };
 }
@@ -80,7 +81,7 @@ function Meta({
   );
 }
 
-export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
+export default function FlightCard({ flight }: FlightCardProps) {
   return (
     <Link to="/flights/$flightId" params={{ flightId: flight._id }}>
       <Card className="group h-full cursor-pointer gap-3 overflow-hidden rounded-2xl border border-border bg-card py-5 ring-0 transition-all duration-200 hover:border-primary/40 hover:shadow-lg dark:hover:shadow-primary/5">
@@ -91,30 +92,35 @@ export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
             <span className="truncate">{flight.locationName}</span>
           </CardTitle>
           <CardAction>
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              <Calendar className="size-2.5" />
-              {new Date(flight.date).toLocaleDateString("fr-FR", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </span>
+            {flight.isPublic ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                <Globe className="size-2.5" />
+                Public
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <Lock className="size-2.5" />
+                Privé
+              </span>
+            )}
           </CardAction>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-1.5 text-xs">
+            <Meta icon={Calendar}>
+              {new Date(flight.date).toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </Meta>
             {flight.droneModel && <Meta icon={Drone}>{flight.droneModel}</Meta>}
             {flight.durationMinutes != null && (
               <Meta icon={Clock}>{flight.durationMinutes} min</Meta>
             )}
             {flight.maxAltitudeMeters != null && (
               <Meta icon={Mountain}>{flight.maxAltitudeMeters} m</Meta>
-            )}
-            {flight.latitude != null && flight.longitude != null && (
-              <Meta icon={MapPin}>
-                {flight.latitude.toFixed(2)}, {flight.longitude.toFixed(2)}
-              </Meta>
             )}
           </div>
 

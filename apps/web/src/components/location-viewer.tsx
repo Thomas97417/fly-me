@@ -26,13 +26,10 @@ const DARK_FOG = {
   "star-intensity": 0.6,
 };
 
-interface LocationPickerProps {
-  latitude?: number;
-  longitude?: number;
-  onCoordinatesChange: (coords: {
-    latitude: number;
-    longitude: number;
-  }) => void;
+interface LocationViewerProps {
+  latitude: number;
+  longitude: number;
+  locationName?: string;
 }
 
 function createMarkerElement() {
@@ -57,11 +54,11 @@ function createMarkerElement() {
   return el;
 }
 
-export default function LocationPicker({
+export default function LocationViewer({
   latitude,
   longitude,
-  onCoordinatesChange,
-}: LocationPickerProps) {
+  locationName,
+}: LocationViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -69,39 +66,20 @@ export default function LocationPicker({
   const themeRef = useRef<string | undefined>(undefined);
   const { resolvedTheme } = useTheme();
 
-  // Keep latest theme accessible from the map's style.load listener
   themeRef.current = resolvedTheme;
-
-  function placeMarker(lng: number, lat: number, fly = false) {
-    const map = mapRef.current;
-    if (!map) return;
-    if (markerRef.current) {
-      markerRef.current.setLngLat([lng, lat]);
-    } else {
-      markerRef.current = new mapboxgl.Marker({
-        element: createMarkerElement(),
-        anchor: "bottom",
-      })
-        .setLngLat([lng, lat])
-        .addTo(map);
-    }
-    if (fly) {
-      map.flyTo({ center: [lng, lat], zoom: 13, duration: 1200 });
-    }
-  }
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const hasInitial = latitude != null && longitude != null;
     const initialStyle =
       resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
     currentStyleRef.current = initialStyle;
+
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: initialStyle,
-      center: hasInitial ? [longitude!, latitude!] : [2.35, 46.85],
-      zoom: hasInitial ? 12 : 4,
+      center: [longitude, latitude],
+      zoom: 12,
       attributionControl: false,
     });
 
@@ -120,22 +98,16 @@ export default function LocationPicker({
       map.setFog((isDark ? DARK_FOG : LIGHT_FOG) as any);
     });
 
-    map.on("click", (e) => {
-      const { lng, lat } = e.lngLat;
-      const roundedLat = Math.round(lat * 1000000) / 1000000;
-      const roundedLng = Math.round(lng * 1000000) / 1000000;
-      placeMarker(roundedLng, roundedLat);
-      onCoordinatesChange({
-        latitude: roundedLat,
-        longitude: roundedLng,
-      });
+    map.on("load", () => {
+      markerRef.current = new mapboxgl.Marker({
+        element: createMarkerElement(),
+        anchor: "bottom",
+      })
+        .setLngLat([longitude, latitude])
+        .addTo(map);
     });
 
     mapRef.current = map;
-
-    if (hasInitial) {
-      map.on("load", () => placeMarker(longitude!, latitude!));
-    }
 
     return () => {
       map.remove();
@@ -155,8 +127,6 @@ export default function LocationPicker({
     map.setStyle(target);
   }, [resolvedTheme]);
 
-  const hasCoords = latitude != null && longitude != null;
-
   return (
     <>
       <style>{`
@@ -164,7 +134,6 @@ export default function LocationPicker({
           display: flex;
           flex-direction: column;
           align-items: center;
-          cursor: pointer;
         }
         .flyme-marker-pin {
           position: relative;
@@ -180,11 +149,7 @@ export default function LocationPicker({
             0 4px 14px rgba(37, 99, 235, 0.45),
             0 2px 4px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
-          transition:
-            transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-            box-shadow 0.25s ease;
           z-index: 2;
-          will-change: transform;
         }
         .flyme-marker-pin::before {
           content: "";
@@ -209,17 +174,6 @@ export default function LocationPicker({
             opacity: 0;
           }
         }
-        .flyme-marker:hover .flyme-marker-pin {
-          transform: scale(1.2);
-          box-shadow:
-            0 8px 26px rgba(37, 99, 235, 0.6),
-            0 4px 10px rgba(0, 0, 0, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.35);
-        }
-        .flyme-marker:hover .flyme-marker-pin::before {
-          animation-play-state: paused;
-          opacity: 0;
-        }
         .flyme-marker-tail {
           width: 0;
           height: 0;
@@ -235,13 +189,13 @@ export default function LocationPicker({
       <div className="relative w-full overflow-hidden rounded-lg border">
         <div ref={containerRef} className="w-full h-72" />
 
-        {/* Hint / coords pill */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-muted-foreground inline-flex items-center gap-1.5">
-            <MapPin className="size-3" />
-            {hasCoords
-              ? `${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}`
-              : "Cliquez pour placer un marqueur"}
+          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-foreground inline-flex items-center gap-1.5 max-w-[80%]">
+            <MapPin className="size-3 shrink-0 text-primary" />
+            <span className="truncate">
+              {locationName ??
+                `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
+            </span>
           </span>
         </div>
       </div>

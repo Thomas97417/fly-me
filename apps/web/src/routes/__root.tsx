@@ -17,6 +17,7 @@ import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
 import NavigationCard from "../components/navigation-card";
+import NewFlightBubble from "../components/flight/new-flight-bubble";
 import ErrorBoundary from "../components/error-boundary";
 import NotFound from "../components/not-found";
 import appCss from "../index.css?url";
@@ -102,6 +103,7 @@ function RootDocument() {
                 <div className="h-full overflow-y-auto">
                   <Outlet />
                 </div>
+                <NewFlightBubble />
               </div>
               <Toaster richColors />
               <TanStackRouterDevtools position="bottom-left" />

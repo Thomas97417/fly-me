@@ -90,8 +90,29 @@ export const listMyFlights = query({
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .collect();
 
-    return flights.sort(
+    const sorted = flights.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    return await Promise.all(
+      sorted.map(async (flight) => {
+        const allMedia = await ctx.db
+          .query("flightMedia")
+          .withIndex("by_flightId", (q) => q.eq("flightId", flight._id))
+          .collect();
+
+        const previews = await Promise.all(
+          allMedia
+            .filter((m) => m.mediaType === "image")
+            .slice(0, 3)
+            .map(async (m) => {
+              const metadata = await r2.getMetadata(ctx, m.r2Key);
+              return { _id: m._id, url: metadata?.url ?? null };
+            })
+        );
+
+        return { ...flight, previews };
+      })
     );
   },
 });
@@ -214,13 +235,34 @@ export const getPublicUserProfile = query({
       .filter((f) => f.isPublic)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    const flightsWithPreviews = await Promise.all(
+      publicFlights.map(async (flight) => {
+        const allMedia = await ctx.db
+          .query("flightMedia")
+          .withIndex("by_flightId", (q) => q.eq("flightId", flight._id))
+          .collect();
+
+        const previews = await Promise.all(
+          allMedia
+            .filter((m) => m.mediaType === "image")
+            .slice(0, 3)
+            .map(async (m) => {
+              const metadata = await r2.getMetadata(ctx, m.r2Key);
+              return { _id: m._id, url: metadata?.url ?? null };
+            })
+        );
+
+        return { ...flight, previews };
+      })
+    );
+
     return {
       user: {
         _id: user._id,
         name: user.name,
         image,
       },
-      flights: publicFlights,
+      flights: flightsWithPreviews,
     };
   },
 });

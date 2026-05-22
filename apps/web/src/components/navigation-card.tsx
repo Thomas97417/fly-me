@@ -4,7 +4,6 @@ import { Authenticated, Unauthenticated } from "convex/react";
 import { ChevronLeft, ChevronRight, User } from "lucide-react";
 
 import UserMenu from "./user-menu";
-import UserAvatar from "./user-avatar";
 import { ModeToggle } from "./mode-toggle";
 
 const linkStyles =
@@ -40,16 +39,23 @@ export default function NavigationCard() {
 
         {expanded ? (
           <>
-            <Authenticated>
-              <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-4">
+              <Link
+                to="/"
+                className={linkStyles}
+                activeOptions={{ exact: true }}
+              >
+                Globe
+              </Link>
+              <Authenticated>
                 <Link to="/flights" className={linkStyles}>
                   Mes Vols
                 </Link>
                 <Link to="/settings" className={linkStyles}>
                   Settings
                 </Link>
-              </nav>
-            </Authenticated>
+              </Authenticated>
+            </nav>
 
             <div className="flex items-center gap-2">
               <ModeToggle />
@@ -64,7 +70,7 @@ export default function NavigationCard() {
         ) : (
           <>
             <Authenticated>
-              <UserAvatar />
+              <UserMenu />
             </Authenticated>
             <Unauthenticated>
               <GuestAvatar />
