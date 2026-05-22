@@ -1,10 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { Authenticated, useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicFlightCard from "@/components/public-flight-card";
-import { ArrowLeft, User, Drone, MapPin, Clock } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Drone,
+  MapPin,
+  Clock,
+  Users,
+  UserPlus,
+  UserCheck,
+  UserMinus,
+} from "lucide-react";
 
 export const Route = createFileRoute("/users/$userId")({
   head: () => ({
@@ -41,9 +53,71 @@ function StatBlock({
   );
 }
 
+function FollowButton({ userId }: { userId: string }) {
+  const state = useQuery(api.subscriptions.getSubscriptionState, { userId });
+  const subscribe = useMutation(api.subscriptions.subscribe);
+  const unsubscribe = useMutation(api.subscriptions.unsubscribe);
+  const [pending, setPending] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  if (!state || state.isSelf) return null;
+
+  const handleClick = async () => {
+    setPending(true);
+    try {
+      if (state.isSubscribed) {
+        await unsubscribe({ userId });
+        toast.success("Désabonné");
+      } else {
+        await subscribe({ userId });
+        toast.success("Abonné");
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Une erreur est survenue",
+      );
+    } finally {
+      setPending(false);
+    }
+  };
+
+  if (state.isSubscribed) {
+    return (
+      <Button
+        variant="outline"
+        disabled={pending}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={handleClick}
+        className="gap-1.5"
+      >
+        {hovered ? (
+          <>
+            <UserMinus className="size-4" />
+            Ne plus suivre
+          </>
+        ) : (
+          <>
+            <UserCheck className="size-4" />
+            Abonné
+          </>
+        )}
+      </Button>
+    );
+  }
+
+  return (
+    <Button disabled={pending} onClick={handleClick} className="gap-1.5">
+      <UserPlus className="size-4" />
+      Suivre
+    </Button>
+  );
+}
+
 function UserProfilePage() {
   const { userId } = Route.useParams();
   const profile = useQuery(api.flights.getPublicUserProfile, { userId });
+  const stats = useQuery(api.subscriptions.getSubscriptionStats, { userId });
 
   if (profile === undefined) {
     return (
@@ -98,7 +172,7 @@ function UserProfilePage() {
   return (
     <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Hero */}
-      <div className="mb-10 flex flex-col items-center gap-5 text-center">
+      <div className="mb-8 flex flex-col items-center gap-5 text-center">
         <div className="size-24 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg">
           {user.image ? (
             <img
@@ -113,24 +187,27 @@ function UserProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight">
           {user.name ?? "Pilote"}
         </h1>
+        <Authenticated>
+          <FollowButton userId={userId} />
+        </Authenticated>
       </div>
 
-      {flights.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md py-20 text-center shadow-sm">
-          <div className="flex size-14 items-center justify-center rounded-full bg-muted/60">
-            <Drone className="size-6 text-muted-foreground" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium">Aucun vol public</p>
-            <p className="text-sm text-muted-foreground">
-              Ce pilote n'a pas encore partagé de sortie.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Stats */}
-          <div className="mb-10 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm">
+      {/* Stats — always visible */}
+      <div className="mb-10 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm">
+        <StatBlock
+          label="Abonnés"
+          value={String(stats?.followersCount ?? 0)}
+          icon={Users}
+        />
+        <div className="hidden h-8 w-px bg-border sm:block" />
+        <StatBlock
+          label="Abonnements"
+          value={String(stats?.followingCount ?? 0)}
+          icon={UserPlus}
+        />
+        {flights.length > 0 && (
+          <>
+            <div className="hidden h-8 w-px bg-border sm:block" />
             <StatBlock
               label="Vols"
               value={String(flights.length)}
@@ -152,15 +229,28 @@ function UserProfilePage() {
                 />
               </>
             )}
-          </div>
+          </>
+        )}
+      </div>
 
-          {/* Grid */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {flights.map((flight) => (
-              <PublicFlightCard key={flight._id} flight={flight} />
-            ))}
+      {flights.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md py-20 text-center shadow-sm">
+          <div className="flex size-14 items-center justify-center rounded-full bg-muted/60">
+            <Drone className="size-6 text-muted-foreground" />
           </div>
-        </>
+          <div className="flex flex-col gap-1">
+            <p className="font-medium">Aucun vol public</p>
+            <p className="text-sm text-muted-foreground">
+              Ce pilote n'a pas encore partagé de sortie.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {flights.map((flight) => (
+            <PublicFlightCard key={flight._id} flight={flight} />
+          ))}
+        </div>
       )}
     </div>
   );

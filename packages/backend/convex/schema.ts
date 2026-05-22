@@ -27,4 +27,12 @@ export default defineSchema({
   })
     .index("by_flightId", ["flightId"])
     .index("by_userId", ["userId"]),
+
+  subscriptions: defineTable({
+    subscriberId: v.string(),
+    subscribedToId: v.string(),
+  })
+    .index("by_subscriber", ["subscriberId"])
+    .index("by_subscribed", ["subscribedToId"])
+    .index("by_pair", ["subscriberId", "subscribedToId"]),
 });

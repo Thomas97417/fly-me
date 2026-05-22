@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as privateData from "../privateData.js";
 import type * as r2 from "../r2.js";
 import type * as sendEmails from "../sendEmails.js";
+import type * as subscriptions from "../subscriptions.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   privateData: typeof privateData;
   r2: typeof r2;
   sendEmails: typeof sendEmails;
+  subscriptions: typeof subscriptions;
 }>;
 
 /**
