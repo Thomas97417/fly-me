@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MediaPicker } from "@/components/media-picker";
+import LocationViewer from "@/components/location-viewer";
 import {
   MapPin,
   Calendar,
@@ -138,18 +139,7 @@ function FlightDetailPage() {
     icon: React.ComponentType<{ className?: string }>;
     label: string;
     value: string;
-  }> = [
-    {
-      icon: Calendar,
-      label: "Date",
-      value: new Date(flight.date).toLocaleDateString("fr-FR", {
-        weekday: "short",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    },
-  ];
+  }> = [];
   if (flight.droneModel) {
     stats.push({ icon: Drone, label: "Drone", value: flight.droneModel });
   }
@@ -167,14 +157,6 @@ function FlightDetailPage() {
       value: `${flight.maxAltitudeMeters} m`,
     });
   }
-  if (flight.latitude != null && flight.longitude != null) {
-    stats.push({
-      icon: MapPin,
-      label: "Coordonnées",
-      value: `${flight.latitude.toFixed(4)}, ${flight.longitude.toFixed(4)}`,
-    });
-  }
-
   return (
     <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Hero */}
@@ -205,7 +187,7 @@ function FlightDetailPage() {
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
             {flight.locationName}
           </h1>
-          <div className="flex items-center justify-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
             <Link
               to="/users/$userId"
               params={{ userId: flight.owner._id }}
@@ -214,6 +196,14 @@ function FlightDetailPage() {
               {flight.owner.name ?? "Pilote"}
             </Link>
             <span className="text-muted-foreground/40">·</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              <Calendar className="size-2.5" />
+              {new Date(flight.date).toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                 flight.isPublic
@@ -270,6 +260,19 @@ function FlightDetailPage() {
           </div>
         </SectionCard>
       </div>
+
+      {/* Localisation */}
+      {flight.latitude != null && flight.longitude != null && (
+        <div className="mb-10">
+          <SectionCard icon={MapPin} label="Localisation">
+            <LocationViewer
+              latitude={flight.latitude}
+              longitude={flight.longitude}
+              locationName={flight.locationName}
+            />
+          </SectionCard>
+        </div>
+      )}
 
       {/* Delete */}
       {isOwner && (

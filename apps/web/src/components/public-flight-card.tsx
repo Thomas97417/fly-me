@@ -57,7 +57,7 @@ function PreviewStrip({
             src={p.url!}
             alt=""
             loading="lazy"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>
       ))}
