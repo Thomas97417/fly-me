@@ -15,8 +15,34 @@ interface LikeButtonProps {
 export default function LikeButton({ flightId, className }: LikeButtonProps) {
   const id = flightId as Id<"flights">;
   const state = useQuery(api.likes.getLikeState, { flightId: id });
-  const like = useMutation(api.likes.likeFlight);
-  const unlike = useMutation(api.likes.unlikeFlight);
+  const like = useMutation(api.likes.likeFlight).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.likes.getLikeState, {
+        flightId: args.flightId,
+      });
+      if (current && !current.isLiked) {
+        localStore.setQuery(
+          api.likes.getLikeState,
+          { flightId: args.flightId },
+          { count: current.count + 1, isLiked: true },
+        );
+      }
+    },
+  );
+  const unlike = useMutation(api.likes.unlikeFlight).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.likes.getLikeState, {
+        flightId: args.flightId,
+      });
+      if (current && current.isLiked) {
+        localStore.setQuery(
+          api.likes.getLikeState,
+          { flightId: args.flightId },
+          { count: Math.max(0, current.count - 1), isLiked: false },
+        );
+      }
+    },
+  );
   const user = useCurrentUser();
   const navigate = useNavigate();
 
