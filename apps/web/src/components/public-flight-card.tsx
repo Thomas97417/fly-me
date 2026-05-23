@@ -15,6 +15,7 @@ import {
   MapPin,
   ArrowRight,
 } from "lucide-react";
+import LikeButton from "@/components/like-button";
 
 interface PublicFlightCardProps {
   flight: {
@@ -125,11 +126,12 @@ export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
           )}
         </CardContent>
 
-        <CardFooter className="pt-0 border-t-0">
+        <CardFooter className="flex items-center justify-between pt-0 border-t-0">
           <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-primary">
             Voir le vol
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
+          <LikeButton flightId={flight._id} />
         </CardFooter>
       </Card>
     </Link>

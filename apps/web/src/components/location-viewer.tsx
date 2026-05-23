@@ -190,9 +190,9 @@ export default function LocationViewer({
         <div ref={containerRef} className="w-full h-72" />
 
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-foreground inline-flex items-center gap-1.5 max-w-[80%]">
+          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-foreground inline-flex items-center gap-1.5">
             <MapPin className="size-3 shrink-0 text-primary" />
-            <span className="truncate">
+            <span className="">
               {locationName ??
                 `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
             </span>

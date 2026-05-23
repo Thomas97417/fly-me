@@ -75,6 +75,15 @@ export const deleteFlight = mutation({
       await ctx.db.delete(m._id);
     }
 
+    const likes = await ctx.db
+      .query("likes")
+      .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    for (const l of likes) {
+      await ctx.db.delete(l._id);
+    }
+
     await ctx.db.delete(args.flightId);
   },
 });

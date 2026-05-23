@@ -2,7 +2,15 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { LogOut, Settings, Drone, UserRound, User, Users } from "lucide-react";
+import {
+  LogOut,
+  Settings,
+  Drone,
+  UserRound,
+  User,
+  Users,
+  Heart,
+} from "lucide-react";
 
 import {
   DropdownMenu,
@@ -94,6 +102,14 @@ export default function UserMenu() {
         >
           <Users className="mr-2 size-4 text-muted-foreground" />
           Abonnements
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
+          onClick={() => navigate({ to: "/likes" })}
+        >
+          <Heart className="mr-2 size-4 text-muted-foreground" />
+          Mes Likes
         </DropdownMenuItem>
 
         <DropdownMenuItem
