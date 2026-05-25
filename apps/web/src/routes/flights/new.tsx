@@ -38,6 +38,7 @@ import {
   Plus,
   Images,
   Youtube,
+  MessageCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/flights/new")({
@@ -83,6 +84,7 @@ const flightSchema = z.object({
       "Lien YouTube invalide.",
     ),
   isPublic: z.boolean(),
+  allowComments: z.boolean(),
 });
 
 function FormCard({
@@ -169,6 +171,7 @@ function NewFlightPage() {
       maxAltitudeMeters: undefined as number | undefined,
       youtubeUrl: "",
       isPublic: true,
+      allowComments: true,
     },
     onSubmit: async ({ value }) => {
       let flightId;
@@ -184,6 +187,7 @@ function NewFlightPage() {
           maxAltitudeMeters: value.maxAltitudeMeters,
           youtubeUrl: value.youtubeUrl?.trim() || undefined,
           isPublic: value.isPublic,
+          allowComments: value.allowComments,
         });
       } catch {
         toast.error("Échec de la création du vol.");
@@ -473,6 +477,36 @@ function NewFlightPage() {
                   <span className="text-xs text-muted-foreground">
                     Les autres pilotes pourront voir ce vol sur la carte
                     publique.
+                  </span>
+                </div>
+              </label>
+            )}
+          />
+        </FormCard>
+
+        <FormCard icon={MessageCircle} label="Commentaires">
+          <form.Field
+            name="allowComments"
+            children={(field) => (
+              <label
+                htmlFor="allowComments"
+                className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/20 p-4 cursor-pointer transition-colors hover:bg-muted/40"
+              >
+                <Checkbox
+                  id="allowComments"
+                  checked={field.state.value}
+                  onCheckedChange={(checked) =>
+                    field.handleChange(checked === true)
+                  }
+                  className="mt-0.5"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">
+                    Autoriser les commentaires
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Les autres pilotes pourront commenter ce vol et répondre
+                    aux commentaires existants.
                   </span>
                 </div>
               </label>

@@ -14,6 +14,7 @@ export default defineSchema({
     maxAltitudeMeters: v.optional(v.float64()),
     youtubeUrl: v.optional(v.string()),
     isPublic: v.boolean(),
+    allowComments: v.optional(v.boolean()),
   })
     .index("by_userId", ["userId"])
     .index("by_isPublic", ["isPublic"]),
@@ -44,4 +45,13 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_flight", ["flightId"])
     .index("by_pair", ["userId", "flightId"]),
+
+  comments: defineTable({
+    flightId: v.id("flights"),
+    userId: v.string(),
+    content: v.string(),
+    parentCommentId: v.optional(v.id("comments")),
+  })
+    .index("by_flight", ["flightId"])
+    .index("by_parent", ["parentCommentId"]),
 });

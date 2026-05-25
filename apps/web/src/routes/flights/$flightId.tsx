@@ -18,11 +18,13 @@ import {
   FileText,
   Images,
   Youtube,
+  MessageCircle,
 } from "lucide-react";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
 import OwnerAvatar from "@/components/ui/owner-avatar";
 import { DeleteFlightDialog } from "@/components/flight/delete-flight-dialog";
+import FlightComments from "@/components/flight/flight-comments";
 
 export const Route = createFileRoute("/flights/$flightId")({
   head: () => ({
@@ -311,6 +313,18 @@ function FlightDetailPage() {
               latitude={flight.latitude}
               longitude={flight.longitude}
               locationName={flight.locationName}
+            />
+          </SectionCard>
+        </div>
+      )}
+
+      {/* Comments */}
+      {flight.allowComments !== false && (
+        <div className="mb-10">
+          <SectionCard icon={MessageCircle} label="Commentaires">
+            <FlightComments
+              flightId={flight._id}
+              flightOwnerId={flight.userId}
             />
           </SectionCard>
         </div>

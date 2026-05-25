@@ -15,6 +15,7 @@ export const createFlight = mutation({
     maxAltitudeMeters: v.optional(v.float64()),
     youtubeUrl: v.optional(v.string()),
     isPublic: v.boolean(),
+    allowComments: v.boolean(),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -40,6 +41,7 @@ export const updateFlight = mutation({
     maxAltitudeMeters: v.optional(v.float64()),
     youtubeUrl: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
+    allowComments: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -84,6 +86,15 @@ export const deleteFlight = mutation({
 
     for (const l of likes) {
       await ctx.db.delete(l._id);
+    }
+
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    for (const c of comments) {
+      await ctx.db.delete(c._id);
     }
 
     await ctx.db.delete(args.flightId);
