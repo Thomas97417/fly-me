@@ -28,7 +28,6 @@ import LocationPicker from "@/components/location-picker";
 import {
   Loader2,
   Save,
-  ArrowLeft,
   Calendar as CalendarIcon,
   Drone,
   Clock,
@@ -38,6 +37,7 @@ import {
   MapPin,
   Plus,
   Images,
+  Youtube,
 } from "lucide-react";
 
 export const Route = createFileRoute("/flights/new")({
@@ -75,6 +75,13 @@ const flightSchema = z.object({
   droneModel: z.string(),
   durationMinutes: z.union([z.number(), z.undefined()]),
   maxAltitudeMeters: z.union([z.number(), z.undefined()]),
+  youtubeUrl: z
+    .string()
+    .trim()
+    .refine(
+      (v) => !v || /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(v),
+      "Lien YouTube invalide.",
+    ),
   isPublic: z.boolean(),
 });
 
@@ -160,6 +167,7 @@ function NewFlightPage() {
       droneModel: "",
       durationMinutes: undefined as number | undefined,
       maxAltitudeMeters: undefined as number | undefined,
+      youtubeUrl: "",
       isPublic: true,
     },
     onSubmit: async ({ value }) => {
@@ -174,6 +182,7 @@ function NewFlightPage() {
           droneModel: value.droneModel?.trim() || undefined,
           durationMinutes: value.durationMinutes,
           maxAltitudeMeters: value.maxAltitudeMeters,
+          youtubeUrl: value.youtubeUrl?.trim() || undefined,
           isPublic: value.isPublic,
         });
       } catch {
@@ -413,6 +422,27 @@ function NewFlightPage() {
         </FormCard>
 
         <FormCard icon={Images} label="Médias">
+          <form.Field
+            name="youtubeUrl"
+            children={(field) => (
+              <Field
+                htmlFor="youtubeUrl"
+                label="Lien YouTube (optionnel)"
+                icon={Youtube}
+              >
+                <Input
+                  id="youtubeUrl"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://youtu.be/..."
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                <FieldErrors errors={field.state.meta.errors} />
+              </Field>
+            )}
+          />
           <MediaPicker
             mode="deferred"
             value={mediaItems}

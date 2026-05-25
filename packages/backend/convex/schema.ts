@@ -12,6 +12,7 @@ export default defineSchema({
     droneModel: v.optional(v.string()),
     durationMinutes: v.optional(v.float64()),
     maxAltitudeMeters: v.optional(v.float64()),
+    youtubeUrl: v.optional(v.string()),
     isPublic: v.boolean(),
   })
     .index("by_userId", ["userId"])

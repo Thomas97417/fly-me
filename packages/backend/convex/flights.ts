@@ -13,6 +13,7 @@ export const createFlight = mutation({
     droneModel: v.optional(v.string()),
     durationMinutes: v.optional(v.float64()),
     maxAltitudeMeters: v.optional(v.float64()),
+    youtubeUrl: v.optional(v.string()),
     isPublic: v.boolean(),
   },
   handler: async (ctx, args) => {
@@ -37,6 +38,7 @@ export const updateFlight = mutation({
     droneModel: v.optional(v.string()),
     durationMinutes: v.optional(v.float64()),
     maxAltitudeMeters: v.optional(v.float64()),
+    youtubeUrl: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {

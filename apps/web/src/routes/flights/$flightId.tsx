@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   FileText,
   Images,
+  Youtube,
 } from "lucide-react";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
@@ -35,6 +36,23 @@ export const Route = createFileRoute("/flights/$flightId")({
   }),
   component: FlightDetailPage,
 });
+
+function getYouTubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    if (u.hostname === "youtu.be") {
+      return u.pathname.slice(1).split("/")[0] || null;
+    }
+    if (u.hostname.endsWith("youtube.com")) {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const match = u.pathname.match(/^\/(?:embed|shorts|v)\/([^/?]+)/);
+      if (match) return match[1];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 function StatCard({
   icon: Icon,
@@ -260,6 +278,30 @@ function FlightDetailPage() {
           </div>
         </SectionCard>
       </div>
+
+      {/* YouTube */}
+      {flight.youtubeUrl &&
+        (() => {
+          const videoId = getYouTubeVideoId(flight.youtubeUrl);
+          if (!videoId) return null;
+          return (
+            <div className="mb-10">
+              <SectionCard icon={Youtube} label="Vidéo YouTube">
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${videoId}`}
+                    title="Vidéo du vol"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                    className="absolute inset-0 size-full"
+                  />
+                </div>
+              </SectionCard>
+            </div>
+          );
+        })()}
 
       {/* Localisation */}
       {flight.latitude != null && flight.longitude != null && (
