@@ -13,8 +13,59 @@ interface FollowButtonProps {
 
 export default function FollowButton({ userId, className }: FollowButtonProps) {
   const state = useQuery(api.subscriptions.getSubscriptionState, { userId });
-  const subscribe = useMutation(api.subscriptions.subscribe);
-  const unsubscribe = useMutation(api.subscriptions.unsubscribe);
+  const subscribe = useMutation(api.subscriptions.subscribe).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.subscriptions.getSubscriptionState, {
+        userId: args.userId,
+      });
+      if (current && !current.isSelf && !current.isSubscribed) {
+        localStore.setQuery(
+          api.subscriptions.getSubscriptionState,
+          { userId: args.userId },
+          { isSubscribed: true, isSelf: false },
+        );
+      }
+
+      const stats = localStore.getQuery(api.subscriptions.getSubscriptionStats, {
+        userId: args.userId,
+      });
+      if (stats) {
+        localStore.setQuery(
+          api.subscriptions.getSubscriptionStats,
+          { userId: args.userId },
+          { ...stats, followersCount: stats.followersCount + 1 },
+        );
+      }
+    },
+  );
+  const unsubscribe = useMutation(api.subscriptions.unsubscribe).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.subscriptions.getSubscriptionState, {
+        userId: args.userId,
+      });
+      if (current && !current.isSelf && current.isSubscribed) {
+        localStore.setQuery(
+          api.subscriptions.getSubscriptionState,
+          { userId: args.userId },
+          { isSubscribed: false, isSelf: false },
+        );
+      }
+
+      const stats = localStore.getQuery(api.subscriptions.getSubscriptionStats, {
+        userId: args.userId,
+      });
+      if (stats) {
+        localStore.setQuery(
+          api.subscriptions.getSubscriptionStats,
+          { userId: args.userId },
+          {
+            ...stats,
+            followersCount: Math.max(0, stats.followersCount - 1),
+          },
+        );
+      }
+    },
+  );
   const [pending, setPending] = useState(false);
   const [hovered, setHovered] = useState(false);
 
