@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -13,7 +13,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { User, Trash2, Reply, Send } from "lucide-react";
+import { User, Trash2, Reply, Send, Heart } from "lucide-react";
 
 interface FlightCommentsProps {
   flightId: Id<"flights">;
@@ -21,6 +21,39 @@ interface FlightCommentsProps {
 }
 
 type Author = { _id: string; name: string | null; image: string | null } | null;
+type CommentWithLikes = Doc<"comments"> & {
+  likeCount: number;
+  isLikedByMe: boolean;
+};
+type Thread = {
+  comment: CommentWithLikes;
+  author: Author;
+  replies: Array<{ comment: CommentWithLikes; author: Author }>;
+};
+
+function applyLike(
+  threads: Thread[],
+  commentId: Id<"comments">,
+  isLikedTarget: boolean,
+): Thread[] {
+  const patch = (c: CommentWithLikes): CommentWithLikes => {
+    if (c._id !== commentId) return c;
+    if (c.isLikedByMe === isLikedTarget) return c;
+    return {
+      ...c,
+      likeCount: isLikedTarget
+        ? c.likeCount + 1
+        : Math.max(0, c.likeCount - 1),
+      isLikedByMe: isLikedTarget,
+    };
+  };
+
+  return threads.map((thread) => ({
+    ...thread,
+    comment: patch(thread.comment),
+    replies: thread.replies.map((r) => ({ ...r, comment: patch(r.comment) })),
+  }));
+}
 
 export default function FlightComments({
   flightId,
@@ -28,8 +61,35 @@ export default function FlightComments({
 }: FlightCommentsProps) {
   const threads = useQuery(api.comments.listFlightComments, { flightId });
   const user = useCurrentUser();
+  const navigate = useNavigate();
   const addComment = useMutation(api.comments.addComment);
   const deleteComment = useMutation(api.comments.deleteComment);
+  const likeComment = useMutation(
+    api.comments.likeComment,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.comments.listFlightComments, {
+      flightId: args.flightId,
+    });
+    if (!current) return;
+    localStore.setQuery(
+      api.comments.listFlightComments,
+      { flightId: args.flightId },
+      applyLike(current, args.commentId, true),
+    );
+  });
+  const unlikeComment = useMutation(
+    api.comments.unlikeComment,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.comments.listFlightComments, {
+      flightId: args.flightId,
+    });
+    if (!current) return;
+    localStore.setQuery(
+      api.comments.listFlightComments,
+      { flightId: args.flightId },
+      applyLike(current, args.commentId, false),
+    );
+  });
 
   const [rootDraft, setRootDraft] = useState("");
   const [replyingTo, setReplyingTo] = useState<Id<"comments"> | null>(null);
@@ -66,6 +126,24 @@ export default function FlightComments({
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Échec de la suppression.",
+      );
+    }
+  };
+
+  const handleToggleLike = async (comment: CommentWithLikes) => {
+    if (!user) {
+      navigate({ to: "/sign-in" });
+      return;
+    }
+    try {
+      if (comment.isLikedByMe) {
+        await unlikeComment({ commentId: comment._id, flightId });
+      } else {
+        await likeComment({ commentId: comment._id, flightId });
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Une erreur est survenue.",
       );
     }
   };
@@ -110,6 +188,7 @@ export default function FlightComments({
                 author={thread.author}
                 canDelete={canModerate(thread.comment.userId)}
                 onDelete={() => handleDelete(thread.comment._id)}
+                onToggleLike={() => handleToggleLike(thread.comment)}
                 onReplyClick={
                   user
                     ? () => {
@@ -130,6 +209,7 @@ export default function FlightComments({
                       author={r.author}
                       canDelete={canModerate(r.comment.userId)}
                       onDelete={() => handleDelete(r.comment._id)}
+                      onToggleLike={() => handleToggleLike(r.comment)}
                       isReply
                     />
                   ))}
@@ -215,13 +295,15 @@ function CommentBubble({
   canDelete,
   onDelete,
   onReplyClick,
+  onToggleLike,
   isReply,
 }: {
-  comment: Doc<"comments">;
+  comment: CommentWithLikes;
   author: Author;
   canDelete: boolean;
   onDelete: () => void;
   onReplyClick?: () => void;
+  onToggleLike: () => void;
   isReply?: boolean;
 }) {
   const name = author?.name ?? "Pilote";
@@ -279,30 +361,44 @@ function CommentBubble({
           {comment.content}
         </p>
 
-        {(onReplyClick || canDelete) && (
-          <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-            {onReplyClick && (
-              <button
-                type="button"
-                onClick={onReplyClick}
-                className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-              >
-                <Reply className="size-3" />
-                Répondre
-              </button>
+        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+          <button
+            type="button"
+            onClick={onToggleLike}
+            aria-label={comment.isLikedByMe ? "Retirer le like" : "Liker"}
+            className={cn(
+              "inline-flex items-center gap-1 transition-colors",
+              comment.isLikedByMe
+                ? "text-rose-500"
+                : "hover:text-rose-500",
             )}
-            {canDelete && (
-              <button
-                type="button"
-                onClick={onDelete}
-                className="inline-flex items-center gap-1 hover:text-destructive transition-colors"
-              >
-                <Trash2 className="size-3" />
-                Supprimer
-              </button>
-            )}
-          </div>
-        )}
+          >
+            <Heart
+              className={cn("size-3", comment.isLikedByMe && "fill-current")}
+            />
+            {comment.likeCount > 0 && <span>{comment.likeCount}</span>}
+          </button>
+          {onReplyClick && (
+            <button
+              type="button"
+              onClick={onReplyClick}
+              className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+            >
+              <Reply className="size-3" />
+              Répondre
+            </button>
+          )}
+          {canDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="inline-flex items-center gap-1 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="size-3" />
+              Supprimer
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );

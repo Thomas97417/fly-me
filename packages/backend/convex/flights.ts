@@ -94,6 +94,13 @@ export const deleteFlight = mutation({
       .collect();
 
     for (const c of comments) {
+      const commentLikes = await ctx.db
+        .query("commentLikes")
+        .withIndex("by_comment", (q) => q.eq("commentId", c._id))
+        .collect();
+      for (const cl of commentLikes) {
+        await ctx.db.delete(cl._id);
+      }
       await ctx.db.delete(c._id);
     }
 

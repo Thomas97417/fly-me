@@ -1,5 +1,11 @@
 import { v } from "convex/values";
-import { mutation, query, type QueryCtx } from "./_generated/server";
+import {
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { authComponent } from "./auth";
 import { r2 } from "./r2";
 
@@ -18,6 +24,8 @@ async function resolveAvatar(
 export const listFlightComments = query({
   args: { flightId: v.id("flights") },
   handler: async (ctx, args) => {
+    const me = await authComponent.safeGetAuthUser(ctx);
+
     const rows = await ctx.db
       .query("comments")
       .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
@@ -43,6 +51,18 @@ export const listFlightComments = query({
       return author;
     }
 
+    async function withLikes<T extends { _id: Id<"comments"> }>(c: T) {
+      const likes = await ctx.db
+        .query("commentLikes")
+        .withIndex("by_comment", (q) => q.eq("commentId", c._id))
+        .collect();
+      return {
+        ...c,
+        likeCount: likes.length,
+        isLikedByMe: me ? likes.some((l) => l.userId === me._id) : false,
+      };
+    }
+
     const roots = rows
       .filter((c) => !c.parentCommentId)
       .sort((a, b) => a._creationTime - b._creationTime);
@@ -62,11 +82,11 @@ export const listFlightComments = query({
         );
 
         return {
-          comment: root,
+          comment: await withLikes(root),
           author: await getAuthor(root.userId),
           replies: await Promise.all(
             replies.map(async (r) => ({
-              comment: r,
+              comment: await withLikes(r),
               author: await getAuthor(r.userId),
             })),
           ),
@@ -117,6 +137,19 @@ export const addComment = mutation({
   },
 });
 
+async function deleteCommentLikes(
+  ctx: MutationCtx,
+  commentId: Id<"comments">,
+) {
+  const likes = await ctx.db
+    .query("commentLikes")
+    .withIndex("by_comment", (q) => q.eq("commentId", commentId))
+    .collect();
+  for (const l of likes) {
+    await ctx.db.delete(l._id);
+  }
+}
+
 export const deleteComment = mutation({
   args: { commentId: v.id("comments") },
   handler: async (ctx, args) => {
@@ -139,10 +172,67 @@ export const deleteComment = mutation({
         .withIndex("by_parent", (q) => q.eq("parentCommentId", args.commentId))
         .collect();
       for (const r of replies) {
+        await deleteCommentLikes(ctx, r._id);
         await ctx.db.delete(r._id);
       }
     }
 
+    await deleteCommentLikes(ctx, args.commentId);
     await ctx.db.delete(args.commentId);
+  },
+});
+
+export const likeComment = mutation({
+  args: {
+    commentId: v.id("comments"),
+    flightId: v.id("flights"),
+  },
+  handler: async (ctx, args) => {
+    const me = await authComponent.safeGetAuthUser(ctx);
+    if (!me) throw new Error("Not authenticated");
+
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.flightId !== args.flightId) {
+      throw new Error("Commentaire introuvable.");
+    }
+
+    const existing = await ctx.db
+      .query("commentLikes")
+      .withIndex("by_pair", (q) =>
+        q.eq("userId", me._id).eq("commentId", args.commentId),
+      )
+      .unique();
+
+    if (existing) return;
+
+    await ctx.db.insert("commentLikes", {
+      userId: me._id,
+      commentId: args.commentId,
+    });
+  },
+});
+
+export const unlikeComment = mutation({
+  args: {
+    commentId: v.id("comments"),
+    flightId: v.id("flights"),
+  },
+  handler: async (ctx, args) => {
+    const me = await authComponent.safeGetAuthUser(ctx);
+    if (!me) throw new Error("Not authenticated");
+
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.flightId !== args.flightId) {
+      throw new Error("Commentaire introuvable.");
+    }
+
+    const existing = await ctx.db
+      .query("commentLikes")
+      .withIndex("by_pair", (q) =>
+        q.eq("userId", me._id).eq("commentId", args.commentId),
+      )
+      .unique();
+
+    if (existing) await ctx.db.delete(existing._id);
   },
 });

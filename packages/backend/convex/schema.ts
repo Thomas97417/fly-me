@@ -54,4 +54,12 @@ export default defineSchema({
   })
     .index("by_flight", ["flightId"])
     .index("by_parent", ["parentCommentId"]),
+
+  commentLikes: defineTable({
+    userId: v.string(),
+    commentId: v.id("comments"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_comment", ["commentId"])
+    .index("by_pair", ["userId", "commentId"]),
 });
