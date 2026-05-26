@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MediaLightbox } from "@/components/media-lightbox";
+import { cn } from "@/lib/utils";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
 interface FlightPreviewData {
@@ -74,15 +75,77 @@ function MetaItem({
   children: React.ReactNode;
 }) {
   return (
-    <span className="flex items-center gap-1.5">
+    <span className="inline-flex items-center gap-1.5">
       <Icon className="size-3.5 text-muted-foreground/70" />
       {children}
     </span>
   );
 }
 
+function ImagesGrid({
+  images,
+  onImageClick,
+}: {
+  images: Array<{ _id: string; url: string }>;
+  onImageClick: (key: string) => void;
+}) {
+  const count = images.length;
+  if (count === 0) return null;
+
+  const visible = images.slice(0, 4);
+  const extra = count - visible.length;
+
+  return (
+    <div
+      className={cn(
+        "grid gap-1.5 overflow-hidden rounded-xl",
+        count === 1 && "grid-cols-1 aspect-[16/10]",
+        count === 2 && "grid-cols-2 aspect-[16/10]",
+        count === 3 && "grid-cols-3 grid-rows-2 aspect-[3/2]",
+        count >= 4 && "grid-cols-2 grid-rows-2 aspect-square",
+      )}
+    >
+      {visible.map((img, i) => {
+        const isHero = count === 3 && i === 0;
+        const isLastWithExtra = extra > 0 && i === visible.length - 1;
+
+        return (
+          <button
+            key={img._id}
+            type="button"
+            onClick={() => onImageClick(img._id)}
+            className={cn(
+              "group relative overflow-hidden bg-muted outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring",
+              isHero && "col-span-2 row-span-2",
+            )}
+          >
+            <img
+              src={img.url}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/10" />
+            {isLastWithExtra ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 text-base font-semibold text-white backdrop-blur-[2px]">
+                +{extra}
+              </div>
+            ) : (
+              <div className="pointer-events-none absolute bottom-1.5 left-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="flex size-7 items-center justify-center rounded-full bg-background/85 text-foreground backdrop-blur-sm">
+                  <Maximize2 className="size-3.5" />
+                </div>
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const cardStyles =
-  "w-80 max-w-sm rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md shadow-lg ring-0 transition-all duration-200";
+  "w-[24rem] max-w-md rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md shadow-lg ring-0 transition-all duration-200";
 
 export default function FlightPreviewCard({
   flightId,
@@ -96,22 +159,19 @@ export default function FlightPreviewCard({
       <Card className={cardStyles}>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <Skeleton className="size-10 rounded-full" />
+            <Skeleton className="size-12 rounded-full" />
             <div className="flex flex-col gap-1.5">
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-28" />
               <Skeleton className="h-3 w-16" />
             </div>
           </div>
           <CloseButton onClose={onClose} />
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-6 w-48" />
           <Skeleton className="h-3 w-32" />
           <Skeleton className="h-3 w-28" />
-          <div className="grid grid-cols-2 gap-1.5">
-            <Skeleton className="aspect-square rounded-md" />
-            <Skeleton className="aspect-square rounded-md" />
-          </div>
+          <Skeleton className="aspect-[16/10] w-full rounded-xl" />
         </CardContent>
       </Card>
     );
@@ -134,10 +194,14 @@ export default function FlightPreviewCard({
   }
 
   const { flight, owner, media } = data;
-  const images = media.filter((m) => m.mediaType === "image" && m.url);
+  const images = media
+    .filter((m): m is { _id: string; url: string; mediaType: string } =>
+      Boolean(m.mediaType === "image" && m.url),
+    )
+    .map((m) => ({ _id: m._id, url: m.url }));
   const lightboxItems = images.map((img) => ({
     key: img._id,
-    url: img.url!,
+    url: img.url,
     isImage: true,
   }));
 
@@ -148,9 +212,9 @@ export default function FlightPreviewCard({
           <Link
             to="/users/$userId"
             params={{ userId: owner._id }}
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-3 group min-w-0"
           >
-            <div className="size-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
+            <div className="size-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
               {owner.image ? (
                 <img
                   src={owner.image}
@@ -158,14 +222,14 @@ export default function FlightPreviewCard({
                   className="size-full object-cover"
                 />
               ) : (
-                <User className="size-5 text-muted-foreground" />
+                <User className="size-6 text-muted-foreground" />
               )}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                 {owner.name ?? "Utilisateur"}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground/80">
                 Voir le profil
               </span>
             </div>
@@ -174,11 +238,11 @@ export default function FlightPreviewCard({
         </CardHeader>
 
         <CardContent className="flex flex-col gap-3">
-          <CardTitle className="text-base font-semibold tracking-tight leading-tight">
+          <CardTitle className="text-lg font-semibold tracking-tight leading-tight">
             {flight.locationName}
           </CardTitle>
 
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
             <MetaItem icon={Calendar}>
               {new Date(flight.date).toLocaleDateString("fr-FR", {
                 day: "numeric",
@@ -198,35 +262,12 @@ export default function FlightPreviewCard({
           </div>
 
           {flight.description && (
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
               {flight.description}
             </p>
           )}
 
-          {images.length > 0 && (
-            <div className="grid grid-cols-2 gap-1.5">
-              {images.map((img) => (
-                <button
-                  key={img._id}
-                  type="button"
-                  onClick={() => setActiveKey(img._id)}
-                  className="group relative aspect-square overflow-hidden rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <img
-                    src={img.url!}
-                    alt=""
-                    className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/10" />
-                  <div className="pointer-events-none absolute bottom-1.5 left-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    <div className="flex size-6 items-center justify-center rounded-full bg-background/85 text-foreground backdrop-blur-sm">
-                      <Maximize2 className="size-3" />
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+          <ImagesGrid images={images} onImageClick={setActiveKey} />
         </CardContent>
 
         <CardFooter className="justify-center border-none pt-0">

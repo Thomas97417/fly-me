@@ -8,6 +8,7 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouteContext,
+  useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
@@ -18,6 +19,7 @@ import { getToken } from "@/lib/auth-server";
 
 import NavigationCard from "../components/navigation-card";
 import NewFlightBubble from "../components/flight/new-flight-bubble";
+import MapLinesBackground from "../components/map-lines-background";
 import ErrorBoundary from "../components/error-boundary";
 import NotFound from "../components/not-found";
 import appCss from "../index.css?url";
@@ -77,6 +79,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showMapLines = pathname !== "/";
   return (
     <ConvexBetterAuthProvider
       client={context.convexQueryClient.convexClient}
@@ -99,6 +103,7 @@ function RootDocument() {
               storageKey="vite-ui-theme"
             >
               <div className="h-svh relative">
+                {showMapLines && <MapLinesBackground />}
                 <NavigationCard />
                 <div className="h-full overflow-y-auto">
                   <Outlet />
