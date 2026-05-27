@@ -62,4 +62,12 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_comment", ["commentId"])
     .index("by_pair", ["userId", "commentId"]),
+
+  bookmarks: defineTable({
+    userId: v.string(),
+    flightId: v.id("flights"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_flight", ["flightId"])
+    .index("by_pair", ["userId", "flightId"]),
 });

@@ -16,6 +16,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import LikeButton from "@/components/like-button";
+import BookmarkButton from "@/components/bookmark-button";
 
 interface PublicFlightCardProps {
   flight: {
@@ -131,7 +132,10 @@ export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
             Voir le vol
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
-          <LikeButton flightId={flight._id} />
+          <div className="flex items-center gap-1">
+            <BookmarkButton flightId={flight._id} />
+            <LikeButton flightId={flight._id} />
+          </div>
         </CardFooter>
       </Card>
     </Link>

@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as bookmarks from "../bookmarks.js";
 import type * as comments from "../comments.js";
 import type * as env from "../env.js";
 import type * as flightMedia from "../flightMedia.js";
@@ -29,6 +30,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  bookmarks: typeof bookmarks;
   comments: typeof comments;
   env: typeof env;
   flightMedia: typeof flightMedia;

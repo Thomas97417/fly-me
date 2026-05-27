@@ -54,6 +54,9 @@ export default function NavigationCard() {
                 <Link to="/subscriptions" className={linkStyles}>
                   Abonnements
                 </Link>
+                <Link to="/bookmarks" className={linkStyles}>
+                  Mes favoris
+                </Link>
               </Authenticated>
             </nav>
 

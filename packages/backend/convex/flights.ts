@@ -88,6 +88,15 @@ export const deleteFlight = mutation({
       await ctx.db.delete(l._id);
     }
 
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    for (const b of bookmarks) {
+      await ctx.db.delete(b._id);
+    }
+
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))

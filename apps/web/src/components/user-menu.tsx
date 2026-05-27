@@ -9,7 +9,7 @@ import {
   UserRound,
   User,
   Users,
-  Heart,
+  Bookmark,
 } from "lucide-react";
 
 import {
@@ -106,10 +106,10 @@ export default function UserMenu() {
 
         <DropdownMenuItem
           className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
-          onClick={() => navigate({ to: "/likes" })}
+          onClick={() => navigate({ to: "/bookmarks" })}
         >
-          <Heart className="mr-2 size-4 text-muted-foreground" />
-          Mes Likes
+          <Bookmark className="mr-2 size-4 text-muted-foreground" />
+          Mes favoris
         </DropdownMenuItem>
 
         <DropdownMenuItem
