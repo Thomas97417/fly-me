@@ -113,6 +113,7 @@ export default function LocationPicker({
       new mapboxgl.NavigationControl({ showCompass: false }),
       "top-right",
     );
+    map.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
     // Re-apply fog after every style load (initial + style swaps)
     map.on("style.load", () => {
@@ -233,7 +234,7 @@ export default function LocationPicker({
       `}</style>
 
       <div className="relative w-full overflow-hidden rounded-lg border">
-        <div ref={containerRef} className="w-full h-72" />
+        <div ref={containerRef} className="w-full h-96 sm:h-[34rem]" />
 
         {/* Hint / coords pill */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
