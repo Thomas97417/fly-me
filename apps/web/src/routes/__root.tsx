@@ -81,7 +81,11 @@ function RootDocument() {
   const context = useRouteContext({ from: Route.id });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showMapLines =
-    pathname !== "/" && pathname !== "/sign-in" && pathname !== "/sign-up";
+    pathname !== "/" &&
+    pathname !== "/sign-in" &&
+    pathname !== "/sign-up" &&
+    pathname !== "/forgot-password" &&
+    pathname !== "/reset-password";
   return (
     <ConvexBetterAuthProvider
       client={context.convexQueryClient.convexClient}
