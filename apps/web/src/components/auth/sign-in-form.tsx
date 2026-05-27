@@ -32,11 +32,11 @@ export default function SignInForm() {
             navigate({
               to: "/dashboard",
             });
-            toast.success("Sign in successful");
+            toast.success("Connexion réussie");
           },
           onError: (error) => {
             if (error.error.status === 403) {
-              toast.error("Please verify your email before signing in.");
+              toast.error("Vérifie ton email avant de te connecter.");
             } else {
               toast.error(error.error.message || error.error.statusText);
             }
@@ -46,15 +46,19 @@ export default function SignInForm() {
     },
     validators: {
       onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        email: z.email("Adresse email invalide"),
+        password: z
+          .string()
+          .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
       }),
     },
   });
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+      <h1 className="mb-6 text-center text-3xl font-bold">
+        Content de te revoir
+      </h1>
 
       <form
         onSubmit={(e) => {
@@ -73,7 +77,7 @@ export default function SignInForm() {
                   id={field.name}
                   name={field.name}
                   type="email"
-                  placeholder="john.doe@example.com"
+                  placeholder="jean.dupont@exemple.com"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
@@ -93,12 +97,12 @@ export default function SignInForm() {
             {(field) => (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor={field.name}>Password</Label>
+                  <Label htmlFor={field.name}>Mot de passe</Label>
                   <Link
                     to="/forgot-password"
                     className="text-xs text-muted-foreground hover:underline cursor-pointer"
                   >
-                    Forgot password?
+                    Mot de passe oublié ?
                   </Link>
                 </div>
                 <PasswordInput
@@ -126,7 +130,7 @@ export default function SignInForm() {
               className="w-full"
               disabled={!state.canSubmit || state.isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {state.isSubmitting ? "Connexion…" : "Se connecter"}
             </Button>
           )}
         </form.Subscribe>
@@ -138,7 +142,7 @@ export default function SignInForm() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
+            Ou continue avec
           </span>
         </div>
       </div>
@@ -149,19 +153,19 @@ export default function SignInForm() {
       </div>
 
       <div className="mt-4 text-center text-sm text-muted-foreground">
-        <span>Need an account? </span>
+        <span>Pas encore de compte ? </span>
         <Link
           to="/sign-up"
           className="hover:underline hover:text-foreground cursor-pointer font-bold"
         >
-          Sign Up
+          Inscris-toi
         </Link>
         <span className="mx-2">·</span>
         <Link
           to="/verify-email"
           className="hover:underline hover:text-foreground cursor-pointer"
         >
-          Verify your email
+          Vérifier ton email
         </Link>
       </div>
     </div>

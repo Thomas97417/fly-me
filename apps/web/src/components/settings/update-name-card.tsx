@@ -24,7 +24,7 @@ export default function UpdateNameCard({ name }: { name: string }) {
         { name: value.name },
         {
           onSuccess: () => {
-            toast.success("Name updated successfully.");
+            toast.success("Nom mis à jour.");
           },
           onError: (error) => {
             toast.error(error.error.message);
@@ -34,7 +34,7 @@ export default function UpdateNameCard({ name }: { name: string }) {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters."),
+        name: z.string().min(2, "Le nom doit contenir au moins 2 caractères."),
       }),
     },
   });
@@ -50,16 +50,16 @@ export default function UpdateNameCard({ name }: { name: string }) {
       <SettingsCard>
         <SettingsCardContent>
           <SettingsCardHeader
-            title="Your Name"
-            description="This is the name displayed on your profile."
+            title="Ton nom"
+            description="C'est le nom affiché sur ton profil."
           />
           <form.Field
             name="name"
             children={(field) => (
               <div className="flex flex-col gap-1">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Nom</Label>
                 <Input
-                  placeholder="Name"
+                  placeholder="Nom"
                   autoComplete="off"
                   required
                   value={field.state.value}
@@ -78,7 +78,7 @@ export default function UpdateNameCard({ name }: { name: string }) {
         </SettingsCardContent>
         <SettingsCardFooter>
           <p className="text-sm text-muted-foreground">
-            Please use 32 characters at maximum.
+            32 caractères maximum.
           </p>
           <form.Subscribe>
             {(state) => (
@@ -90,7 +90,7 @@ export default function UpdateNameCard({ name }: { name: string }) {
                 {state.isSubmitting ? (
                   <Loader2 className="animate-spin" />
                 ) : (
-                  "Save"
+                  "Enregistrer"
                 )}
               </Button>
             )}

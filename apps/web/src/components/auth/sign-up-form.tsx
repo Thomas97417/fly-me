@@ -35,7 +35,7 @@ export default function SignUpForm() {
               to: "/dashboard",
             });
             toast.success(
-              "Sign up successful, please check your email for verification.",
+              "Inscription réussie, vérifie ton email pour valider ton compte.",
             );
           },
           onError: (error) => {
@@ -46,14 +46,14 @@ export default function SignUpForm() {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Invalid email address"),
+        name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+        email: z.email("Adresse email invalide"),
         password: z
           .string()
-          .min(8, "Password must be at least 8 characters")
+          .min(8, "Le mot de passe doit contenir au moins 8 caractères")
           .regex(
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
-            "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+            "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial",
           ),
       }),
     },
@@ -61,7 +61,7 @@ export default function SignUpForm() {
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Create Account</h1>
+      <h1 className="mb-6 text-center text-3xl font-bold">Créer un compte</h1>
 
       <form
         onSubmit={(e) => {
@@ -75,11 +75,11 @@ export default function SignUpForm() {
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Name</Label>
+                <Label htmlFor={field.name}>Nom</Label>
                 <Input
                   id={field.name}
                   name={field.name}
-                  placeholder="John Doe"
+                  placeholder="Jean Dupont"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
@@ -103,7 +103,7 @@ export default function SignUpForm() {
                   id={field.name}
                   name={field.name}
                   type="email"
-                  placeholder="john.doe@example.com"
+                  placeholder="jean.dupont@exemple.com"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
@@ -122,7 +122,7 @@ export default function SignUpForm() {
           <form.Field name="password">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
+                <Label htmlFor={field.name}>Mot de passe</Label>
                 <PasswordInput
                   id={field.name}
                   placeholder="********"
@@ -148,7 +148,7 @@ export default function SignUpForm() {
               className="w-full"
               disabled={!state.canSubmit || state.isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign Up"}
+              {state.isSubmitting ? "Création…" : "S'inscrire"}
             </Button>
           )}
         </form.Subscribe>
@@ -160,7 +160,7 @@ export default function SignUpForm() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
+            Ou continue avec
           </span>
         </div>
       </div>
@@ -172,13 +172,13 @@ export default function SignUpForm() {
 
       <div className="mt-4 text-center">
         <span className="text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Tu as déjà un compte ?{" "}
         </span>
         <Link
           to="/sign-in"
           className="hover:underline text-sm text-muted-foreground hover:text-foreground hover:cursor-pointer"
         >
-          <span className="font-bold">Sign In</span>
+          <span className="font-bold">Se connecter</span>
         </Link>
       </div>
     </div>
