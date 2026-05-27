@@ -90,14 +90,6 @@ export default function UserMenu() {
 
         <DropdownMenuItem
           className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
-          onClick={() => navigate({ to: "/flights" })}
-        >
-          <Drone className="mr-2 size-4 text-muted-foreground" />
-          Mes Vols
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          className="cursor-pointer rounded-lg px-2.5 py-2 text-xs"
           onClick={() => navigate({ to: "/subscriptions" })}
         >
           <Users className="mr-2 size-4 text-muted-foreground" />

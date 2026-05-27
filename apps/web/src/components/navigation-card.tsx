@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { ChevronLeft, ChevronRight, User } from "lucide-react";
 
+import { useCurrentUser } from "@/hooks/use-current-user";
 import UserMenu from "./user-menu";
 import { ModeToggle } from "./mode-toggle";
 
@@ -16,6 +17,20 @@ function GuestAvatar() {
       className="size-8 rounded-full bg-muted flex items-center justify-center"
     >
       <User className="size-4 text-muted-foreground" />
+    </Link>
+  );
+}
+
+function ProfileLink() {
+  const user = useCurrentUser();
+  if (!user) return null;
+  return (
+    <Link
+      to="/users/$userId"
+      params={{ userId: user._id }}
+      className={linkStyles}
+    >
+      Mon profil
     </Link>
   );
 }
@@ -48,9 +63,7 @@ export default function NavigationCard() {
                 Globe
               </Link>
               <Authenticated>
-                <Link to="/flights" className={linkStyles}>
-                  Mes Vols
-                </Link>
+                <ProfileLink />
                 <Link to="/subscriptions" className={linkStyles}>
                   Abonnements
                 </Link>
