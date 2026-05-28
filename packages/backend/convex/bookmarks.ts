@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
-import { r2 } from "./r2";
+import { resolveFlightPreviews } from "./flightPreviews";
 
 export const addBookmark = mutation({
   args: { flightId: v.id("flights") },
@@ -76,21 +76,7 @@ export const listMyBookmarks = query({
         if (!flight) return null;
         if (!flight.isPublic && flight.userId !== me._id) return null;
 
-        const allMedia = await ctx.db
-          .query("flightMedia")
-          .withIndex("by_flightId", (q) => q.eq("flightId", flight._id))
-          .collect();
-
-        const previews = await Promise.all(
-          allMedia
-            .filter((m) => m.mediaType === "image")
-            .slice(0, 3)
-            .map(async (m) => {
-              const metadata = await r2.getMetadata(ctx, m.r2Key);
-              return { _id: m._id, url: metadata?.url ?? null };
-            }),
-        );
-
+        const previews = await resolveFlightPreviews(ctx, flight._id);
         return { ...flight, previews };
       }),
     );

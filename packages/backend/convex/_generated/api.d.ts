@@ -13,6 +13,7 @@ import type * as bookmarks from "../bookmarks.js";
 import type * as comments from "../comments.js";
 import type * as env from "../env.js";
 import type * as flightMedia from "../flightMedia.js";
+import type * as flightPreviews from "../flightPreviews.js";
 import type * as flights from "../flights.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   comments: typeof comments;
   env: typeof env;
   flightMedia: typeof flightMedia;
+  flightPreviews: typeof flightPreviews;
   flights: typeof flights;
   healthCheck: typeof healthCheck;
   http: typeof http;

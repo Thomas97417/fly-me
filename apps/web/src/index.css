@@ -172,9 +172,6 @@
 }
 
 @layer base {
-  html {
-    scrollbar-gutter: inherit;
-  }
   * {
     @apply border-border outline-ring/50;
   }

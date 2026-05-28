@@ -9,6 +9,7 @@ import {
   ArrowRight,
   User,
   Maximize2,
+  Play,
 } from "lucide-react";
 import {
   Card,
@@ -82,17 +83,19 @@ function MetaItem({
   );
 }
 
-function ImagesGrid({
-  images,
-  onImageClick,
+type MediaTile = { _id: string; url: string; mediaType: "image" | "video" };
+
+function MediaGrid({
+  tiles,
+  onTileClick,
 }: {
-  images: Array<{ _id: string; url: string }>;
-  onImageClick: (key: string) => void;
+  tiles: Array<MediaTile>;
+  onTileClick: (key: string) => void;
 }) {
-  const count = images.length;
+  const count = tiles.length;
   if (count === 0) return null;
 
-  const visible = images.slice(0, 4);
+  const visible = tiles.slice(0, 4);
   const extra = count - visible.length;
 
   return (
@@ -105,30 +108,47 @@ function ImagesGrid({
         count >= 4 && "grid-cols-2 grid-rows-2 aspect-square",
       )}
     >
-      {visible.map((img, i) => {
+      {visible.map((tile, i) => {
         const isHero = count === 3 && i === 0;
         const isLastWithExtra = extra > 0 && i === visible.length - 1;
+        const isVideo = tile.mediaType === "video";
 
         return (
           <button
-            key={img._id}
+            key={tile._id}
             type="button"
-            onClick={() => onImageClick(img._id)}
+            onClick={() => onTileClick(tile._id)}
             className={cn(
               "group relative overflow-hidden bg-muted outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring",
               isHero && "col-span-2 row-span-2",
             )}
           >
-            <img
-              src={img.url}
-              alt=""
-              loading="lazy"
-              className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-            />
+            {isVideo ? (
+              <video
+                src={tile.url}
+                muted
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+              />
+            ) : (
+              <img
+                src={tile.url}
+                alt=""
+                loading="lazy"
+                className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+              />
+            )}
             <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/10" />
             {isLastWithExtra ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 text-base font-semibold text-white backdrop-blur-[2px]">
                 +{extra}
+              </div>
+            ) : isVideo ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="flex size-10 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
+                  <Play className="size-4 translate-x-px fill-current" />
+                </div>
               </div>
             ) : (
               <div className="pointer-events-none absolute bottom-1.5 left-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
@@ -194,15 +214,32 @@ export default function FlightPreviewCard({
   }
 
   const { flight, owner, media } = data;
-  const images = media
-    .filter((m): m is { _id: string; url: string; mediaType: string } =>
+  const imageMedia = media.filter(
+    (m): m is { _id: string; url: string; mediaType: string } =>
       Boolean(m.mediaType === "image" && m.url),
-    )
-    .map((m) => ({ _id: m._id, url: m.url }));
-  const lightboxItems = images.map((img) => ({
-    key: img._id,
-    url: img.url,
-    isImage: true,
+  );
+  const videoMedia = media.filter(
+    (m): m is { _id: string; url: string; mediaType: string } =>
+      Boolean(m.mediaType === "video" && m.url),
+  );
+  // Image-priority: only fall back to videos when the flight has no images,
+  // so existing photo-led popups stay visually identical.
+  const tiles: MediaTile[] =
+    imageMedia.length > 0
+      ? imageMedia.map((m) => ({
+          _id: m._id,
+          url: m.url,
+          mediaType: "image" as const,
+        }))
+      : videoMedia.map((m) => ({
+          _id: m._id,
+          url: m.url,
+          mediaType: "video" as const,
+        }));
+  const lightboxItems = tiles.map((t) => ({
+    key: t._id,
+    url: t.url,
+    isImage: t.mediaType === "image",
   }));
 
   return (
@@ -267,7 +304,7 @@ export default function FlightPreviewCard({
             </p>
           )}
 
-          <ImagesGrid images={images} onImageClick={setActiveKey} />
+          <MediaGrid tiles={tiles} onTileClick={setActiveKey} />
         </CardContent>
 
         <CardFooter className="justify-center border-none pt-0">

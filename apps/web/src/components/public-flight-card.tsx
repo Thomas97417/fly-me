@@ -14,9 +14,16 @@ import {
   Mountain,
   MapPin,
   ArrowRight,
+  Play,
 } from "lucide-react";
 import LikeButton from "@/components/like-button";
 import BookmarkButton from "@/components/bookmark-button";
+
+type Preview = {
+  _id: string;
+  url: string | null;
+  mediaType?: "image" | "video";
+};
 
 interface PublicFlightCardProps {
   flight: {
@@ -29,15 +36,11 @@ interface PublicFlightCardProps {
     maxAltitudeMeters?: number;
     latitude?: number;
     longitude?: number;
-    previews?: Array<{ _id: string; url: string | null }>;
+    previews?: Array<Preview>;
   };
 }
 
-function PreviewStrip({
-  previews,
-}: {
-  previews?: Array<{ _id: string; url: string | null }>;
-}) {
+function PreviewStrip({ previews }: { previews?: Array<Preview> }) {
   const valid = previews?.filter((p) => p.url) ?? [];
 
   if (valid.length === 0) {
@@ -55,12 +58,29 @@ function PreviewStrip({
     >
       {valid.map((p) => (
         <div key={p._id} className="relative overflow-hidden bg-muted">
-          <img
-            src={p.url!}
-            alt=""
-            loading="lazy"
-            className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
+          {p.mediaType === "video" ? (
+            <>
+              <video
+                src={p.url!}
+                muted
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="flex size-7 items-center justify-center rounded-full bg-black/60 text-white shadow-md backdrop-blur-sm">
+                  <Play className="size-3.5 translate-x-px fill-current" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <img
+              src={p.url!}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          )}
         </div>
       ))}
     </div>

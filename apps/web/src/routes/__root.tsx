@@ -110,7 +110,7 @@ function RootDocument() {
               <div className="h-svh relative">
                 {showMapLines && <MapLinesBackground />}
                 <NavigationCard />
-                <div className="h-full overflow-y-auto">
+                <div className="h-full overflow-y-auto [scrollbar-gutter:stable_both-edges]">
                   <Outlet />
                 </div>
                 <NewFlightButton />

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { authComponent } from "./auth";
 import { r2 } from "./r2";
+import { resolveFlightPreviews } from "./flightPreviews";
 
 async function resolveUserAvatar(
   ctx: QueryCtx,
@@ -185,21 +186,7 @@ export const listSubscriptionFeed = query({
           ownerCache.set(flight.userId, owner);
         }
 
-        const allMedia = await ctx.db
-          .query("flightMedia")
-          .withIndex("by_flightId", (q) => q.eq("flightId", flight._id))
-          .collect();
-
-        const previews = await Promise.all(
-          allMedia
-            .filter((m) => m.mediaType === "image")
-            .slice(0, 3)
-            .map(async (m) => {
-              const metadata = await r2.getMetadata(ctx, m.r2Key);
-              return { _id: m._id, url: metadata?.url ?? null };
-            }),
-        );
-
+        const previews = await resolveFlightPreviews(ctx, flight._id);
         return { ...flight, owner, previews };
       }),
     );
