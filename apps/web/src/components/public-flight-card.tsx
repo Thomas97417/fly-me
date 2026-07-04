@@ -152,8 +152,9 @@ export default function PublicFlightCard({ flight }: PublicFlightCardProps) {
             Voir le vol
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur-md">
             <BookmarkButton flightId={flight._id} />
+            <div className="h-5 w-px bg-border/60" />
             <LikeButton flightId={flight._id} />
           </div>
         </CardFooter>

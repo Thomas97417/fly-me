@@ -80,8 +80,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isGlobe = pathname === "/";
   const showMapLines =
-    pathname !== "/" &&
+    !isGlobe &&
     pathname !== "/sign-in" &&
     pathname !== "/sign-up" &&
     pathname !== "/forgot-password" &&
@@ -110,7 +111,13 @@ function RootDocument() {
               <div className="h-svh relative">
                 {showMapLines && <MapLinesBackground />}
                 <NavigationCard />
-                <div className="h-full overflow-y-auto [scrollbar-gutter:stable_both-edges]">
+                <div
+                  className={
+                    isGlobe
+                      ? "h-full overflow-hidden"
+                      : "h-full overflow-y-auto [scrollbar-gutter:stable_both-edges]"
+                  }
+                >
                   <Outlet />
                 </div>
                 <NewFlightButton />

@@ -1,9 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicFlightCard from "@/components/public-flight-card";
-import { Bookmark } from "lucide-react";
+import { Bookmark, User } from "lucide-react";
 
 export const Route = createFileRoute("/bookmarks")({
   head: () => ({
@@ -22,6 +22,34 @@ export const Route = createFileRoute("/bookmarks")({
   },
   component: BookmarksPage,
 });
+
+function OwnerStrip({
+  owner,
+}: {
+  owner: { _id: string; name: string | null; image: string | null } | null;
+}) {
+  if (!owner) return null;
+  return (
+    <Link
+      to="/users/$userId"
+      params={{ userId: owner._id }}
+      className="group/owner mb-2 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+    >
+      <div className="size-6 overflow-hidden rounded-full bg-muted ring-1 ring-border/50 flex items-center justify-center shrink-0">
+        {owner.image ? (
+          <img
+            src={owner.image}
+            alt={owner.name ?? ""}
+            className="size-full object-cover"
+          />
+        ) : (
+          <User className="size-3 text-muted-foreground" />
+        )}
+      </div>
+      <span className="font-medium truncate">{owner.name ?? "Pilote"}</span>
+    </Link>
+  );
+}
 
 function BookmarksPage() {
   const bookmarks = useQuery(api.bookmarks.listMyBookmarks);
@@ -59,7 +87,10 @@ function BookmarksPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {bookmarks.map((flight) => (
-            <PublicFlightCard key={flight._id} flight={flight} />
+            <div key={flight._id} className="flex flex-col">
+              <OwnerStrip owner={flight.owner} />
+              <PublicFlightCard flight={flight} />
+            </div>
           ))}
         </div>
       )}

@@ -1,7 +1,32 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import {
+  mutation,
+  query,
+  type QueryCtx,
+} from "./_generated/server";
 import { authComponent } from "./auth";
+import { r2 } from "./r2";
 import { resolveFlightPreviews } from "./flightPreviews";
+
+async function resolveUserAvatar(
+  ctx: QueryCtx,
+  image: string | null | undefined,
+): Promise<string | null> {
+  if (!image) return null;
+  if (image.startsWith("http")) return image;
+  const metadata = await r2.getMetadata(ctx, image);
+  return metadata?.url ?? null;
+}
+
+async function resolveUserCard(ctx: QueryCtx, userId: string) {
+  const user = await authComponent.getAnyUserById(ctx, userId);
+  if (!user) return null;
+  return {
+    _id: user._id,
+    name: user.name ?? null,
+    image: await resolveUserAvatar(ctx, user.image),
+  };
+}
 
 export const addBookmark = mutation({
   args: { flightId: v.id("flights") },
@@ -70,14 +95,23 @@ export const listMyBookmarks = query({
 
     const sorted = rows.sort((a, b) => b._creationTime - a._creationTime);
 
+    type Owner = Awaited<ReturnType<typeof resolveUserCard>>;
+    const ownerCache = new Map<string, Owner>();
+
     const flights = await Promise.all(
       sorted.map(async (row) => {
         const flight = await ctx.db.get(row.flightId);
         if (!flight) return null;
         if (!flight.isPublic && flight.userId !== me._id) return null;
 
+        let owner = ownerCache.get(flight.userId);
+        if (owner === undefined) {
+          owner = await resolveUserCard(ctx, flight.userId);
+          ownerCache.set(flight.userId, owner);
+        }
+
         const previews = await resolveFlightPreviews(ctx, flight._id);
-        return { ...flight, previews };
+        return { ...flight, owner, previews };
       }),
     );
 

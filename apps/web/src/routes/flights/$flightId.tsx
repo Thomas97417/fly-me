@@ -21,6 +21,7 @@ import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
 import OwnerAvatar from "@/components/ui/owner-avatar";
 import { DeleteFlightDialog } from "@/components/flight/delete-flight-dialog";
+import EditFlightDialog from "@/components/flight/edit-flight-dialog";
 import FlightComments from "@/components/flight/flight-comments";
 import FlightBento from "@/components/flight/flight-bento";
 import LikeButton from "@/components/like-button";
@@ -264,11 +265,17 @@ function FlightDetailPage() {
           </div>
         </div>
 
-        {/* Actions — bookmark + like */}
+        {/* Actions — bookmark + like (+ edit for owner) */}
         <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur-md">
           <BookmarkButton flightId={flight._id} />
           <div className="h-5 w-px bg-border/60" />
           <LikeButton flightId={flight._id} />
+          {isOwner && (
+            <>
+              <div className="h-5 w-px bg-border/60" />
+              <EditFlightDialog flight={flight} />
+            </>
+          )}
         </div>
       </div>
 
