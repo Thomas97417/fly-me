@@ -1,10 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { Authenticated, useQuery } from "convex/react";
 import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicFlightCard from "@/components/public-flight-card";
-import { ArrowLeft, User, Drone, MapPin, Clock } from "lucide-react";
+import FollowButton from "@/components/follow-button";
+import {
+  ArrowLeft,
+  User,
+  Drone,
+  MapPin,
+  Clock,
+  Users,
+  UserPlus,
+} from "lucide-react";
 
 export const Route = createFileRoute("/users/$userId")({
   head: () => ({
@@ -44,6 +53,7 @@ function StatBlock({
 function UserProfilePage() {
   const { userId } = Route.useParams();
   const profile = useQuery(api.flights.getPublicUserProfile, { userId });
+  const stats = useQuery(api.subscriptions.getSubscriptionStats, { userId });
 
   if (profile === undefined) {
     return (
@@ -98,7 +108,7 @@ function UserProfilePage() {
   return (
     <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
       {/* Hero */}
-      <div className="mb-10 flex flex-col items-center gap-5 text-center">
+      <div className="mb-8 flex flex-col items-center gap-5 text-center">
         <div className="size-24 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg">
           {user.image ? (
             <img
@@ -113,6 +123,53 @@ function UserProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight">
           {user.name ?? "Pilote"}
         </h1>
+        <Authenticated>
+          <FollowButton userId={userId} />
+        </Authenticated>
+      </div>
+
+      {/* Stats — always visible */}
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          {flights.length > 0 && (
+            <>
+              <StatBlock
+                label="Vols"
+                value={String(flights.length)}
+                icon={Drone}
+              />
+              <div className="hidden h-8 w-px bg-border sm:block" />
+              <StatBlock
+                label="Lieux"
+                value={String(uniqueLocations)}
+                icon={MapPin}
+              />
+              {totalDuration > 0 && (
+                <>
+                  <div className="hidden h-8 w-px bg-border sm:block" />
+                  <StatBlock
+                    label="Minutes"
+                    value={String(Math.round(totalDuration))}
+                    icon={Clock}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <StatBlock
+            label="Abonnés"
+            value={String(stats?.followersCount ?? 0)}
+            icon={Users}
+          />
+          <div className="hidden h-8 w-px bg-border sm:block" />
+          <StatBlock
+            label="Abonnements"
+            value={String(stats?.followingCount ?? 0)}
+            icon={UserPlus}
+          />
+        </div>
       </div>
 
       {flights.length === 0 ? (
@@ -128,39 +185,11 @@ function UserProfilePage() {
           </div>
         </div>
       ) : (
-        <>
-          {/* Stats */}
-          <div className="mb-10 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md px-6 py-5 shadow-sm">
-            <StatBlock
-              label="Vols"
-              value={String(flights.length)}
-              icon={Drone}
-            />
-            <div className="hidden h-8 w-px bg-border sm:block" />
-            <StatBlock
-              label="Lieux"
-              value={String(uniqueLocations)}
-              icon={MapPin}
-            />
-            {totalDuration > 0 && (
-              <>
-                <div className="hidden h-8 w-px bg-border sm:block" />
-                <StatBlock
-                  label="Minutes"
-                  value={String(Math.round(totalDuration))}
-                  icon={Clock}
-                />
-              </>
-            )}
-          </div>
-
-          {/* Grid */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {flights.map((flight) => (
-              <PublicFlightCard key={flight._id} flight={flight} />
-            ))}
-          </div>
-        </>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {flights.map((flight) => (
+            <PublicFlightCard key={flight._id} flight={flight} />
+          ))}
+        </div>
       )}
     </div>
   );

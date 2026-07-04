@@ -28,7 +28,6 @@ import LocationPicker from "@/components/location-picker";
 import {
   Loader2,
   Save,
-  ArrowLeft,
   Calendar as CalendarIcon,
   Drone,
   Clock,
@@ -38,6 +37,8 @@ import {
   MapPin,
   Plus,
   Images,
+  Youtube,
+  MessageCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/flights/new")({
@@ -75,7 +76,15 @@ const flightSchema = z.object({
   droneModel: z.string(),
   durationMinutes: z.union([z.number(), z.undefined()]),
   maxAltitudeMeters: z.union([z.number(), z.undefined()]),
+  youtubeUrl: z
+    .string()
+    .trim()
+    .refine(
+      (v) => !v || /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(v),
+      "Lien YouTube invalide.",
+    ),
   isPublic: z.boolean(),
+  allowComments: z.boolean(),
 });
 
 function FormCard({
@@ -160,7 +169,9 @@ function NewFlightPage() {
       droneModel: "",
       durationMinutes: undefined as number | undefined,
       maxAltitudeMeters: undefined as number | undefined,
+      youtubeUrl: "",
       isPublic: true,
+      allowComments: true,
     },
     onSubmit: async ({ value }) => {
       let flightId;
@@ -174,7 +185,9 @@ function NewFlightPage() {
           droneModel: value.droneModel?.trim() || undefined,
           durationMinutes: value.durationMinutes,
           maxAltitudeMeters: value.maxAltitudeMeters,
+          youtubeUrl: value.youtubeUrl?.trim() || undefined,
           isPublic: value.isPublic,
+          allowComments: value.allowComments,
         });
       } catch {
         toast.error("Échec de la création du vol.");
@@ -413,6 +426,27 @@ function NewFlightPage() {
         </FormCard>
 
         <FormCard icon={Images} label="Médias">
+          <form.Field
+            name="youtubeUrl"
+            children={(field) => (
+              <Field
+                htmlFor="youtubeUrl"
+                label="Lien YouTube (optionnel)"
+                icon={Youtube}
+              >
+                <Input
+                  id="youtubeUrl"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://youtu.be/..."
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                <FieldErrors errors={field.state.meta.errors} />
+              </Field>
+            )}
+          />
           <MediaPicker
             mode="deferred"
             value={mediaItems}
@@ -443,6 +477,36 @@ function NewFlightPage() {
                   <span className="text-xs text-muted-foreground">
                     Les autres pilotes pourront voir ce vol sur la carte
                     publique.
+                  </span>
+                </div>
+              </label>
+            )}
+          />
+        </FormCard>
+
+        <FormCard icon={MessageCircle} label="Commentaires">
+          <form.Field
+            name="allowComments"
+            children={(field) => (
+              <label
+                htmlFor="allowComments"
+                className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/20 p-4 cursor-pointer transition-colors hover:bg-muted/40"
+              >
+                <Checkbox
+                  id="allowComments"
+                  checked={field.state.value}
+                  onCheckedChange={(checked) =>
+                    field.handleChange(checked === true)
+                  }
+                  className="mt-0.5"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">
+                    Autoriser les commentaires
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Les autres pilotes pourront commenter ce vol et répondre
+                    aux commentaires existants.
                   </span>
                 </div>
               </label>

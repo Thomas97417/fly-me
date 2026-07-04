@@ -12,7 +12,9 @@ export default defineSchema({
     droneModel: v.optional(v.string()),
     durationMinutes: v.optional(v.float64()),
     maxAltitudeMeters: v.optional(v.float64()),
+    youtubeUrl: v.optional(v.string()),
     isPublic: v.boolean(),
+    allowComments: v.optional(v.boolean()),
   })
     .index("by_userId", ["userId"])
     .index("by_isPublic", ["isPublic"]),
@@ -27,4 +29,45 @@ export default defineSchema({
   })
     .index("by_flightId", ["flightId"])
     .index("by_userId", ["userId"]),
+
+  subscriptions: defineTable({
+    subscriberId: v.string(),
+    subscribedToId: v.string(),
+  })
+    .index("by_subscriber", ["subscriberId"])
+    .index("by_subscribed", ["subscribedToId"])
+    .index("by_pair", ["subscriberId", "subscribedToId"]),
+
+  likes: defineTable({
+    userId: v.string(),
+    flightId: v.id("flights"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_flight", ["flightId"])
+    .index("by_pair", ["userId", "flightId"]),
+
+  comments: defineTable({
+    flightId: v.id("flights"),
+    userId: v.string(),
+    content: v.string(),
+    parentCommentId: v.optional(v.id("comments")),
+  })
+    .index("by_flight", ["flightId"])
+    .index("by_parent", ["parentCommentId"]),
+
+  commentLikes: defineTable({
+    userId: v.string(),
+    commentId: v.id("comments"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_comment", ["commentId"])
+    .index("by_pair", ["userId", "commentId"]),
+
+  bookmarks: defineTable({
+    userId: v.string(),
+    flightId: v.id("flights"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_flight", ["flightId"])
+    .index("by_pair", ["userId", "flightId"]),
 });

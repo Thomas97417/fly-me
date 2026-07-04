@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 import { r2 } from "./r2";
+import { resolveFlightPreviews } from "./flightPreviews";
 
 export const createFlight = mutation({
   args: {
@@ -13,7 +14,9 @@ export const createFlight = mutation({
     droneModel: v.optional(v.string()),
     durationMinutes: v.optional(v.float64()),
     maxAltitudeMeters: v.optional(v.float64()),
+    youtubeUrl: v.optional(v.string()),
     isPublic: v.boolean(),
+    allowComments: v.boolean(),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -37,7 +40,9 @@ export const updateFlight = mutation({
     droneModel: v.optional(v.string()),
     durationMinutes: v.optional(v.float64()),
     maxAltitudeMeters: v.optional(v.float64()),
+    youtubeUrl: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
+    allowComments: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -75,6 +80,40 @@ export const deleteFlight = mutation({
       await ctx.db.delete(m._id);
     }
 
+    const likes = await ctx.db
+      .query("likes")
+      .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    for (const l of likes) {
+      await ctx.db.delete(l._id);
+    }
+
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    for (const b of bookmarks) {
+      await ctx.db.delete(b._id);
+    }
+
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_flight", (q) => q.eq("flightId", args.flightId))
+      .collect();
+
+    for (const c of comments) {
+      const commentLikes = await ctx.db
+        .query("commentLikes")
+        .withIndex("by_comment", (q) => q.eq("commentId", c._id))
+        .collect();
+      for (const cl of commentLikes) {
+        await ctx.db.delete(cl._id);
+      }
+      await ctx.db.delete(c._id);
+    }
+
     await ctx.db.delete(args.flightId);
   },
 });
@@ -96,21 +135,7 @@ export const listMyFlights = query({
 
     return await Promise.all(
       sorted.map(async (flight) => {
-        const allMedia = await ctx.db
-          .query("flightMedia")
-          .withIndex("by_flightId", (q) => q.eq("flightId", flight._id))
-          .collect();
-
-        const previews = await Promise.all(
-          allMedia
-            .filter((m) => m.mediaType === "image")
-            .slice(0, 3)
-            .map(async (m) => {
-              const metadata = await r2.getMetadata(ctx, m.r2Key);
-              return { _id: m._id, url: metadata?.url ?? null };
-            })
-        );
-
+        const previews = await resolveFlightPreviews(ctx, flight._id);
         return { ...flight, previews };
       })
     );
@@ -237,21 +262,7 @@ export const getPublicUserProfile = query({
 
     const flightsWithPreviews = await Promise.all(
       publicFlights.map(async (flight) => {
-        const allMedia = await ctx.db
-          .query("flightMedia")
-          .withIndex("by_flightId", (q) => q.eq("flightId", flight._id))
-          .collect();
-
-        const previews = await Promise.all(
-          allMedia
-            .filter((m) => m.mediaType === "image")
-            .slice(0, 3)
-            .map(async (m) => {
-              const metadata = await r2.getMetadata(ctx, m.r2Key);
-              return { _id: m._id, url: metadata?.url ?? null };
-            })
-        );
-
+        const previews = await resolveFlightPreviews(ctx, flight._id);
         return { ...flight, previews };
       })
     );

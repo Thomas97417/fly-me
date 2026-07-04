@@ -16,7 +16,16 @@ import {
   Lock,
   ArrowRight,
   MapPin,
+  Play,
 } from "lucide-react";
+import LikeButton from "@/components/like-button";
+import BookmarkButton from "@/components/bookmark-button";
+
+type Preview = {
+  _id: string;
+  url: string | null;
+  mediaType?: "image" | "video";
+};
 
 interface FlightCardProps {
   flight: {
@@ -28,15 +37,11 @@ interface FlightCardProps {
     durationMinutes?: number;
     maxAltitudeMeters?: number;
     isPublic: boolean;
-    previews?: Array<{ _id: string; url: string | null }>;
+    previews?: Array<Preview>;
   };
 }
 
-function PreviewStrip({
-  previews,
-}: {
-  previews?: Array<{ _id: string; url: string | null }>;
-}) {
+function PreviewStrip({ previews }: { previews?: Array<Preview> }) {
   const valid = previews?.filter((p) => p.url) ?? [];
 
   if (valid.length === 0) {
@@ -54,12 +59,29 @@ function PreviewStrip({
     >
       {valid.map((p) => (
         <div key={p._id} className="relative overflow-hidden bg-muted">
-          <img
-            src={p.url!}
-            alt=""
-            loading="lazy"
-            className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
+          {p.mediaType === "video" ? (
+            <>
+              <video
+                src={p.url!}
+                muted
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="flex size-7 items-center justify-center rounded-full bg-black/60 text-white shadow-md backdrop-blur-sm">
+                  <Play className="size-3.5 translate-x-px fill-current" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <img
+              src={p.url!}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          )}
         </div>
       ))}
     </div>
@@ -131,11 +153,16 @@ export default function FlightCard({ flight }: FlightCardProps) {
           )}
         </CardContent>
 
-        <CardFooter className="pt-0 border-t-0">
+        <CardFooter className="flex items-center justify-between pt-0 border-t-0">
           <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-primary">
             Voir le vol
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
           </span>
+          <div className="flex items-center gap-1 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur-md">
+            <BookmarkButton flightId={flight._id} />
+            <div className="h-5 w-px bg-border/60" />
+            <LikeButton flightId={flight._id} />
+          </div>
         </CardFooter>
       </Card>
     </Link>

@@ -71,8 +71,7 @@ export default function LocationViewer({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const initialStyle =
-      resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    const initialStyle = resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
     currentStyleRef.current = initialStyle;
 
     const map = new mapboxgl.Map({
@@ -81,6 +80,7 @@ export default function LocationViewer({
       center: [longitude, latitude],
       zoom: 12,
       attributionControl: false,
+      language: "fr",
     });
 
     map.addControl(
@@ -91,6 +91,7 @@ export default function LocationViewer({
       new mapboxgl.NavigationControl({ showCompass: false }),
       "top-right",
     );
+    map.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
     // Re-apply fog after every style load (initial + style swaps)
     map.on("style.load", () => {
@@ -187,12 +188,12 @@ export default function LocationViewer({
       `}</style>
 
       <div className="relative w-full overflow-hidden rounded-lg border">
-        <div ref={containerRef} className="w-full h-72" />
+        <div ref={containerRef} className="w-full h-96 sm:h-[34rem]" />
 
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-foreground inline-flex items-center gap-1.5 max-w-[80%]">
+          <span className="text-xs px-2.5 py-1 rounded-md bg-background/90 backdrop-blur-sm shadow text-foreground inline-flex items-center gap-1.5">
             <MapPin className="size-3 shrink-0 text-primary" />
-            <span className="truncate">
+            <span className="">
               {locationName ??
                 `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
             </span>

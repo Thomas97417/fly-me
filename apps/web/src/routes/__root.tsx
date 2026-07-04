@@ -8,6 +8,7 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouteContext,
+  useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
@@ -17,7 +18,8 @@ import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
 import NavigationCard from "../components/navigation-card";
-import NewFlightBubble from "../components/flight/new-flight-bubble";
+import NewFlightButton from "../components/flight/new-flight-button";
+import MapLinesBackground from "../components/map-lines-background";
 import ErrorBoundary from "../components/error-boundary";
 import NotFound from "../components/not-found";
 import appCss from "../index.css?url";
@@ -77,6 +79,14 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isGlobe = pathname === "/";
+  const showMapLines =
+    !isGlobe &&
+    pathname !== "/sign-in" &&
+    pathname !== "/sign-up" &&
+    pathname !== "/forgot-password" &&
+    pathname !== "/reset-password";
   return (
     <ConvexBetterAuthProvider
       client={context.convexQueryClient.convexClient}
@@ -99,11 +109,18 @@ function RootDocument() {
               storageKey="vite-ui-theme"
             >
               <div className="h-svh relative">
+                {showMapLines && <MapLinesBackground />}
                 <NavigationCard />
-                <div className="h-full overflow-y-auto">
+                <div
+                  className={
+                    isGlobe
+                      ? "h-full overflow-hidden"
+                      : "h-full overflow-y-auto [scrollbar-gutter:stable_both-edges]"
+                  }
+                >
                   <Outlet />
                 </div>
-                <NewFlightBubble />
+                <NewFlightButton />
               </div>
               <Toaster richColors />
               <TanStackRouterDevtools position="bottom-left" />

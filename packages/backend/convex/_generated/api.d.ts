@@ -9,14 +9,19 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as bookmarks from "../bookmarks.js";
+import type * as comments from "../comments.js";
 import type * as env from "../env.js";
 import type * as flightMedia from "../flightMedia.js";
+import type * as flightPreviews from "../flightPreviews.js";
 import type * as flights from "../flights.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
+import type * as likes from "../likes.js";
 import type * as privateData from "../privateData.js";
 import type * as r2 from "../r2.js";
 import type * as sendEmails from "../sendEmails.js";
+import type * as subscriptions from "../subscriptions.js";
 
 import type {
   ApiFromModules,
@@ -26,14 +31,19 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  bookmarks: typeof bookmarks;
+  comments: typeof comments;
   env: typeof env;
   flightMedia: typeof flightMedia;
+  flightPreviews: typeof flightPreviews;
   flights: typeof flights;
   healthCheck: typeof healthCheck;
   http: typeof http;
+  likes: typeof likes;
   privateData: typeof privateData;
   r2: typeof r2;
   sendEmails: typeof sendEmails;
+  subscriptions: typeof subscriptions;
 }>;
 
 /**

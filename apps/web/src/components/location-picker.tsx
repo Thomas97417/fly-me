@@ -94,8 +94,7 @@ export default function LocationPicker({
     if (!containerRef.current || mapRef.current) return;
 
     const hasInitial = latitude != null && longitude != null;
-    const initialStyle =
-      resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+    const initialStyle = resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE;
     currentStyleRef.current = initialStyle;
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -103,6 +102,7 @@ export default function LocationPicker({
       center: hasInitial ? [longitude!, latitude!] : [2.35, 46.85],
       zoom: hasInitial ? 12 : 4,
       attributionControl: false,
+      language: "fr",
     });
 
     map.addControl(
@@ -113,6 +113,7 @@ export default function LocationPicker({
       new mapboxgl.NavigationControl({ showCompass: false }),
       "top-right",
     );
+    map.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
     // Re-apply fog after every style load (initial + style swaps)
     map.on("style.load", () => {
@@ -233,7 +234,7 @@ export default function LocationPicker({
       `}</style>
 
       <div className="relative w-full overflow-hidden rounded-lg border">
-        <div ref={containerRef} className="w-full h-72" />
+        <div ref={containerRef} className="w-full h-96 sm:h-[34rem]" />
 
         {/* Hint / coords pill */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">

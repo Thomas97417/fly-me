@@ -4,7 +4,6 @@ import { api } from "@my-better-t-app/backend/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MediaPicker } from "@/components/media-picker";
 import LocationViewer from "@/components/location-viewer";
 import {
   MapPin,
@@ -16,12 +15,17 @@ import {
   Lock,
   ArrowLeft,
   FileText,
-  Images,
+  MessageCircle,
 } from "lucide-react";
 import type { Id } from "@my-better-t-app/backend/convex/_generated/dataModel";
 
 import OwnerAvatar from "@/components/ui/owner-avatar";
 import { DeleteFlightDialog } from "@/components/flight/delete-flight-dialog";
+import EditFlightDialog from "@/components/flight/edit-flight-dialog";
+import FlightComments from "@/components/flight/flight-comments";
+import FlightBento from "@/components/flight/flight-bento";
+import LikeButton from "@/components/like-button";
+import BookmarkButton from "@/components/bookmark-button";
 
 export const Route = createFileRoute("/flights/$flightId")({
   head: () => ({
@@ -36,7 +40,24 @@ export const Route = createFileRoute("/flights/$flightId")({
   component: FlightDetailPage,
 });
 
-function StatCard({
+function getYouTubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    if (u.hostname === "youtu.be") {
+      return u.pathname.slice(1).split("/")[0] || null;
+    }
+    if (u.hostname.endsWith("youtube.com")) {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const match = u.pathname.match(/^\/(?:embed|shorts|v)\/([^/?]+)/);
+      if (match) return match[1];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function StatPill({
   icon: Icon,
   label,
   value,
@@ -46,12 +67,12 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-4 shadow-sm">
-      <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-        <Icon className="size-3.5" />
-        {label}
-      </div>
-      <p className="text-sm font-semibold tracking-tight">{value}</p>
+    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 shadow-md backdrop-blur-md">
+      <Icon
+        className="size-3.5 text-muted-foreground"
+        aria-label={label}
+      />
+      <span className="text-xs font-semibold tracking-tight">{value}</span>
     </div>
   );
 }
@@ -92,19 +113,31 @@ function FlightDetailPage() {
 
   if (flight === undefined) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-12">
-        <Skeleton className="h-8 w-24 mb-10" />
-        <div className="flex flex-col items-center gap-4 mb-10">
-          <Skeleton className="size-20 rounded-full" />
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="h-5 w-40" />
+      <div className="container mx-auto max-w-5xl px-4 pt-24 pb-16">
+        {/* Hero skeleton */}
+        <div className="mb-8 flex items-center gap-4">
+          <Skeleton className="size-14 rounded-full" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-40" />
+          </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-2xl" />
-          ))}
+        {/* Info row skeleton */}
+        <div className="mb-10 grid gap-4 sm:grid-cols-3">
+          <Skeleton className="h-24 rounded-2xl sm:col-span-2" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+          </div>
         </div>
-        <Skeleton className="h-48 rounded-2xl" />
+        {/* Bento skeleton */}
+        <div className="mb-10 grid grid-cols-2 sm:grid-cols-4 gap-3 auto-rows-[clamp(140px,20vw,200px)] grid-flow-dense">
+          <Skeleton className="col-span-2 row-span-2 rounded-2xl" />
+          <Skeleton className="rounded-2xl" />
+          <Skeleton className="rounded-2xl" />
+          <Skeleton className="col-span-2 rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -134,6 +167,9 @@ function FlightDetailPage() {
   }
 
   const isOwner = user?._id === flight.userId;
+  const youtubeVideoId = flight.youtubeUrl
+    ? getYouTubeVideoId(flight.youtubeUrl)
+    : null;
 
   const stats: Array<{
     icon: React.ComponentType<{ className?: string }>;
@@ -157,47 +193,52 @@ function FlightDetailPage() {
       value: `${flight.maxAltitudeMeters} m`,
     });
   }
-  return (
-    <div className="container mx-auto max-w-4xl px-4 pt-24 pb-16">
-      {/* Hero */}
-      <div className="mb-10 flex flex-col items-center gap-4 text-center">
-        {isOwner ? (
-          <Link to="/flights" className="group">
-            <OwnerAvatar
-              image={flight.owner.image}
-              name={flight.owner.name}
-              size="lg"
-            />
-          </Link>
-        ) : (
-          <Link
-            to="/users/$userId"
-            params={{ userId: flight.owner._id }}
-            className="group"
-          >
-            <OwnerAvatar
-              image={flight.owner.image}
-              name={flight.owner.name}
-              size="lg"
-            />
-          </Link>
-        )}
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+  const statsOverlay =
+    stats.length > 0 ? (
+      <>
+        {stats.map((s) => (
+          <StatPill
+            key={s.label}
+            icon={s.icon}
+            label={s.label}
+            value={s.value}
+          />
+        ))}
+      </>
+    ) : null;
+
+  return (
+    <div className="container mx-auto max-w-5xl px-4 pt-24 pb-16">
+      {/* Hero — compact, left-aligned */}
+      <div className="mb-8 flex items-center gap-4">
+        <Link
+          to="/users/$userId"
+          params={{ userId: flight.owner._id }}
+          className="group shrink-0"
+          aria-label={`Profil de ${flight.owner.name ?? "Pilote"}`}
+        >
+          <OwnerAvatar
+            image={flight.owner.image}
+            name={flight.owner.name}
+            size="md"
+          />
+        </Link>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
             {flight.locationName}
           </h1>
-          <div className="flex flex-wrap items-center justify-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <Link
               to="/users/$userId"
               params={{ userId: flight.owner._id }}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="hover:text-primary transition-colors"
             >
               {flight.owner.name ?? "Pilote"}
             </Link>
             <span className="text-muted-foreground/40">·</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              <Calendar className="size-2.5" />
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="size-3" />
               {new Date(flight.date).toLocaleDateString("fr-FR", {
                 day: "numeric",
                 month: "long",
@@ -223,21 +264,32 @@ function FlightDetailPage() {
             </span>
           </div>
         </div>
+
+        {/* Actions — bookmark + like (+ edit for owner) */}
+        <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur-md">
+          <BookmarkButton flightId={flight._id} />
+          <div className="h-5 w-px bg-border/60" />
+          <LikeButton flightId={flight._id} />
+          {isOwner && (
+            <>
+              <div className="h-5 w-px bg-border/60" />
+              <EditFlightDialog flight={flight} />
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Stats grid */}
-      <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {stats.map((s) => (
-          <StatCard
-            key={s.label}
-            icon={s.icon}
-            label={s.label}
-            value={s.value}
-          />
-        ))}
+      {/* Bento — media + YouTube + add tile, with stat pills overlaid */}
+      <div className="mb-10">
+        <FlightBento
+          flightId={flight._id}
+          isOwner={isOwner}
+          youtubeVideoId={youtubeVideoId}
+          overlay={statsOverlay}
+        />
       </div>
 
-      {/* Description */}
+      {/* Description (below the bento) */}
       {flight.description && (
         <div className="mb-10">
           <SectionCard icon={FileText} label="Description">
@@ -248,19 +300,6 @@ function FlightDetailPage() {
         </div>
       )}
 
-      {/* Media */}
-      <div className="mb-10">
-        <SectionCard icon={Images} label="Médias">
-          <div className="flex flex-col gap-4">
-            <MediaPicker
-              mode="immediate"
-              flightId={flight._id}
-              isOwner={isOwner}
-            />
-          </div>
-        </SectionCard>
-      </div>
-
       {/* Localisation */}
       {flight.latitude != null && flight.longitude != null && (
         <div className="mb-10">
@@ -269,6 +308,18 @@ function FlightDetailPage() {
               latitude={flight.latitude}
               longitude={flight.longitude}
               locationName={flight.locationName}
+            />
+          </SectionCard>
+        </div>
+      )}
+
+      {/* Comments */}
+      {flight.allowComments !== false && (
+        <div className="mb-10">
+          <SectionCard icon={MessageCircle} label="Commentaires">
+            <FlightComments
+              flightId={flight._id}
+              flightOwnerId={flight.userId}
             />
           </SectionCard>
         </div>

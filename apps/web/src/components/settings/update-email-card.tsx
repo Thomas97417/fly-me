@@ -35,7 +35,7 @@ export default function UpdateEmailCard({ email }: { email: string }) {
         { newEmail: value.newEmail },
         {
           onSuccess: () => {
-            toast.success("Email updated successfully.");
+            toast.success("Email mis à jour.");
           },
           onError: (error) => {
             toast.error(error.error.message);
@@ -45,7 +45,7 @@ export default function UpdateEmailCard({ email }: { email: string }) {
     },
     validators: {
       onSubmit: z.object({
-        newEmail: z.string().email("Invalid email address"),
+        newEmail: z.string().email("Adresse email invalide"),
       }),
     },
   });
@@ -60,8 +60,8 @@ export default function UpdateEmailCard({ email }: { email: string }) {
       <SettingsCard>
         <SettingsCardContent>
           <SettingsCardHeader
-            title="Email Address"
-            description="The email address associated with your account."
+            title="Adresse email"
+            description="L'adresse email associée à ton compte."
           />
           <form.Field
             name="newEmail"
@@ -90,8 +90,8 @@ export default function UpdateEmailCard({ email }: { email: string }) {
         <SettingsCardFooter>
           <p className="text-sm text-muted-foreground">
             {isSocialOnly
-              ? "Email is managed by your social login provider."
-              : "Please enter a valid email address."}
+              ? "L'email est géré par ton fournisseur de connexion."
+              : "Saisis une adresse email valide."}
           </p>
           <form.Subscribe>
             {(state) => (
@@ -105,7 +105,7 @@ export default function UpdateEmailCard({ email }: { email: string }) {
                 {state.isSubmitting ? (
                   <Loader2 className="animate-spin size-4" />
                 ) : (
-                  "Save"
+                  "Enregistrer"
                 )}
               </Button>
             )}

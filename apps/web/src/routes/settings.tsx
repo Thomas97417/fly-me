@@ -18,10 +18,10 @@ import UpdateNameCard from "@/components/settings/update-name-card";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — FlyMe" },
+      { title: "Paramètres — FlyMe" },
       {
         name: "description",
-        content: "Manage your account settings, email, password, and sessions.",
+        content: "Gère ton compte, ton email, ton mot de passe et tes sessions.",
       },
     ],
   }),
@@ -59,17 +59,17 @@ function RouteComponent() {
       <div className="mb-10 flex flex-col gap-1.5">
         <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
           <SettingsIcon className="size-3.5" />
-          Account
+          Compte
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
         <p className="text-sm text-muted-foreground">
-          Manage your account, security and active sessions.
+          Gère ton compte, ta sécurité et tes sessions actives.
         </p>
       </div>
 
       {/* Profile section */}
       <section className="flex flex-col gap-3">
-        <SectionHeader icon={UserRound} label="Profile" />
+        <SectionHeader icon={UserRound} label="Profil" />
         <div className="flex flex-col gap-4">
           <ProfileImageCard image={user.image ?? undefined} />
           <UpdateNameCard name={user.name} />
@@ -79,7 +79,7 @@ function RouteComponent() {
 
       {/* Security section */}
       <section className="mt-10 flex flex-col gap-3">
-        <SectionHeader icon={ShieldCheck} label="Security" />
+        <SectionHeader icon={ShieldCheck} label="Sécurité" />
         <div className="flex flex-col gap-4">
           <ChangePasswordCard />
           <SessionsCard />
@@ -88,7 +88,7 @@ function RouteComponent() {
 
       {/* Danger zone */}
       <section className="mt-10 flex flex-col gap-3">
-        <SectionHeader icon={TriangleAlert} label="Danger zone" />
+        <SectionHeader icon={TriangleAlert} label="Zone sensible" />
         <DeleteAccountCard />
       </section>
     </div>

@@ -32,21 +32,23 @@ export default function ChangePasswordCard() {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Password changed successfully.");
+        toast.success("Mot de passe mis à jour.");
         form.reset();
       }
     },
     validators: {
       onSubmit: z
         .object({
-          currentPassword: z.string().min(1, "Current password is required."),
+          currentPassword: z
+            .string()
+            .min(1, "Le mot de passe actuel est requis."),
           newPassword: z
             .string()
-            .min(8, "New password must be at least 8 characters."),
+            .min(8, "Le nouveau mot de passe doit contenir au moins 8 caractères."),
           confirmPassword: z.string(),
         })
         .refine((data) => data.newPassword === data.confirmPassword, {
-          message: "Passwords do not match.",
+          message: "Les mots de passe ne correspondent pas.",
           path: ["confirmPassword"],
         }),
     },
@@ -63,18 +65,18 @@ export default function ChangePasswordCard() {
       <SettingsCard>
         <SettingsCardContent>
           <SettingsCardHeader
-            title="Password"
-            description="Change the password associated with your account."
+            title="Mot de passe"
+            description="Change le mot de passe associé à ton compte."
           />
           <div className="flex flex-col gap-3">
             <form.Field
               name="currentPassword"
               children={(field) => (
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="currentPassword">Current password</Label>
+                  <Label htmlFor="currentPassword">Mot de passe actuel</Label>
                   <PasswordInput
                     id="currentPassword"
-                    placeholder="Current password"
+                    placeholder="Mot de passe actuel"
                     autoComplete="current-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
@@ -95,10 +97,10 @@ export default function ChangePasswordCard() {
               name="newPassword"
               children={(field) => (
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="newPassword">New password</Label>
+                  <Label htmlFor="newPassword">Nouveau mot de passe</Label>
                   <PasswordInput
                     id="newPassword"
-                    placeholder="New password"
+                    placeholder="Nouveau mot de passe"
                     autoComplete="new-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
@@ -119,10 +121,12 @@ export default function ChangePasswordCard() {
               name="confirmPassword"
               children={(field) => (
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="confirmPassword">Confirm new password</Label>
+                  <Label htmlFor="confirmPassword">
+                    Confirme le nouveau mot de passe
+                  </Label>
                   <PasswordInput
                     id="confirmPassword"
-                    placeholder="Confirm new password"
+                    placeholder="Confirme le nouveau mot de passe"
                     autoComplete="new-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
@@ -143,7 +147,7 @@ export default function ChangePasswordCard() {
         </SettingsCardContent>
         <SettingsCardFooter>
           <p className="text-sm text-muted-foreground">
-            Password must be at least 8 characters.
+            Le mot de passe doit contenir au moins 8 caractères.
           </p>
           <form.Subscribe>
             {(state) => (
@@ -152,7 +156,7 @@ export default function ChangePasswordCard() {
                 size="sm"
                 disabled={!state.canSubmit || state.isSubmitting}
               >
-                {state.isSubmitting ? "Saving..." : "Save"}
+                {state.isSubmitting ? "Enregistrement…" : "Enregistrer"}
               </Button>
             )}
           </form.Subscribe>
